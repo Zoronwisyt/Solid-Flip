@@ -226,6 +226,8 @@ body {
   align-items:center;
   justify-content:center;
   width:min(420px, 100%);
+  touch-action:none;
+  overscroll-behavior:contain;
 }
 
 .graph-canvas {
@@ -233,6 +235,7 @@ body {
   width:100%;
   height:auto;
   user-select:none;
+  -webkit-user-select:none;
   touch-action:none;
   cursor:crosshair;
 }
@@ -501,6 +504,8 @@ input[type=range]::-webkit-slider-thumb:active{transform:scale(1.3);cursor:grabb
 .hb{stroke:var(--accent-b)}
 .handle-core-a{r:3;fill:var(--accent-a);pointer-events:none}
 .handle-core-b{r:3;fill:var(--accent-b);pointer-events:none}
+.handle-hit{r:24;fill:transparent;stroke:transparent;cursor:grab;pointer-events:all;touch-action:none}
+.handle-hit:active{cursor:grabbing}
 
 /* ── ANALYSIS PANEL ── */
 .analysis-panel {
@@ -804,6 +809,10 @@ input[type=range]::-webkit-slider-thumb:active{transform:scale(1.3);cursor:grabb
     width:min(100%, 440px);
   }
 
+  .handle-hit {
+    r:30;
+  }
+
   .coord-strip {
     width:100%;
     margin-top:14px;
@@ -979,10 +988,12 @@ input[type=range]::-webkit-slider-thumb:active{transform:scale(1.3);cursor:grabb
         <!-- Handle A (blue/purple) -->
         <circle id="ha" class="handle-h ha" cx="75" cy="270"/>
         <circle id="ha-core" class="handle-core-a" cx="75" cy="270"/>
+        <circle id="ha-hit" class="handle-hit" cx="75" cy="270" r="28"/>
 
         <!-- Handle B (pink) -->
         <circle id="hb" class="handle-h hb" cx="225" cy="30"/>
         <circle id="hb-core" class="handle-core-b" cx="225" cy="30"/>
+        <circle id="hb-hit" class="handle-hit" cx="225" cy="30" r="28"/>
       </svg>
 
       <!-- Axis labels -->
@@ -1113,6 +1124,7 @@ let animRaf=null, animStart=null, animPlaying=false;
 const svg = document.getElementById('svg-graph');
 const ha = document.getElementById('ha'), haC = document.getElementById('ha-core');
 const hb = document.getElementById('hb'), hbC = document.getElementById('hb-core');
+const haHit = document.getElementById('ha-hit'), hbHit = document.getElementById('hb-hit');
 const rodA = document.getElementById('rod-a'), rodB = document.getElementById('rod-b');
 const curvePath = document.getElementById('curve'), curveShadow = document.getElementById('curve-shadow');
 const pillAT = document.getElementById('pill-a-text'), pillBT = document.getElementById('pill-b-text');
@@ -1167,8 +1179,10 @@ function updateGraph(){
 
   ha.setAttribute('cx',a.x); ha.setAttribute('cy',a.y);
   haC.setAttribute('cx',a.x); haC.setAttribute('cy',a.y);
+  haHit.setAttribute('cx',a.x); haHit.setAttribute('cy',a.y);
   hb.setAttribute('cx',b.x); hb.setAttribute('cy',b.y);
   hbC.setAttribute('cx',b.x); hbC.setAttribute('cy',b.y);
+  hbHit.setAttribute('cx',b.x); hbHit.setAttribute('cy',b.y);
 
   // Origin = (0,300) in SVG (x=0, y=0 in bezier coords)
   // End    = (300,0) in SVG (x=1, y=1 in bezier coords)
@@ -1250,18 +1264,24 @@ function buildPresets(){
 // SVG pointer interaction
 function getSVGPoint(e){
   const pt = svg.createSVGPoint();
-  const src = e.touches ? e.touches[0] : e;
+  const src = e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : e);
   pt.x=src.clientX; pt.y=src.clientY;
-  return pt.matrixTransform(svg.getScreenCTM().inverse());
+  const matrix = svg.getScreenCTM();
+  return matrix ? pt.matrixTransform(matrix.inverse()) : {x:0,y:G};
 }
 
 function startDrag(e,which){
   e.preventDefault();
+  e.stopPropagation();
   dragging=which;
   setStatus('Dragging');
+  if(e.pointerId !== undefined && e.currentTarget.setPointerCapture){
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err) {}
+  }
   const move=(ev)=>{
     if(!dragging)return;
     ev.preventDefault();
+    ev.stopPropagation();
     const pt=getSVGPoint(ev);
     let nx=Math.max(0,Math.min(1,pt.x/G));
     let ny=(G-pt.y)/G; // unbounded for Y
@@ -1269,24 +1289,44 @@ function startDrag(e,which){
     else{x2=nx;y2=clampY(ny);}
     updateGraph();
   };
-  const up=()=>{
+  const up=(ev)=>{
+    if(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
     dragging=null;
     setStatus('Ready');
+    window.removeEventListener('pointermove',move);
+    window.removeEventListener('pointerup',up);
+    window.removeEventListener('pointercancel',up);
     document.removeEventListener('mousemove',move);
     document.removeEventListener('mouseup',up);
     document.removeEventListener('touchmove',move);
     document.removeEventListener('touchend',up);
   };
-  document.addEventListener('mousemove',move);
-  document.addEventListener('mouseup',up);
-  document.addEventListener('touchmove',move,{passive:false});
-  document.addEventListener('touchend',up);
+  if(window.PointerEvent && e.type === 'pointerdown'){
+    window.addEventListener('pointermove',move,{passive:false});
+    window.addEventListener('pointerup',up);
+    window.addEventListener('pointercancel',up);
+  } else {
+    document.addEventListener('mousemove',move);
+    document.addEventListener('mouseup',up);
+    document.addEventListener('touchmove',move,{passive:false});
+    document.addEventListener('touchend',up);
+  }
 }
 
-ha.addEventListener('mousedown',e=>startDrag(e,'a'));
-hb.addEventListener('mousedown',e=>startDrag(e,'b'));
-ha.addEventListener('touchstart',e=>startDrag(e,'a'),{passive:false});
-hb.addEventListener('touchstart',e=>startDrag(e,'b'),{passive:false});
+[
+  [ha,'a'], [haHit,'a'],
+  [hb,'b'], [hbHit,'b']
+].forEach(([target,which])=>{
+  if(window.PointerEvent){
+    target.addEventListener('pointerdown',e=>startDrag(e,which),{passive:false});
+  } else {
+    target.addEventListener('mousedown',e=>startDrag(e,which));
+    target.addEventListener('touchstart',e=>startDrag(e,which),{passive:false});
+  }
+});
 
 // Numeric inputs
 function syncFromInputs(){
