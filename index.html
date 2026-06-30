@@ -135,6 +135,90 @@
 
         <hr class="divider">
 
+        <!-- Animation & Timing -->
+        <div class="control-group">
+          <label>Project Duration & FPS</label>
+          <div class="solid-size-row">
+            <div class="input-group" style="flex:2">
+              <input type="text" id="projectDuration" value="00:00:05.000" class="time-input" placeholder="00:00:00.000">
+            </div>
+            <div class="input-group" style="flex:1">
+              <input type="number" id="projectFps" value="60" step="1" title="FPS">
+              <div class="input-suffix">FPS</div>
+            </div>
+          </div>
+          <div class="control-hint">Format: MM:SS.ms</div>
+        </div>
+
+        <div class="control-group">
+          <label>Flip Layer Animation</label>
+          <div class="toggle-group" id="flipToggle">
+            <button class="toggle-btn active" data-value="on">Enabled</button>
+            <button class="toggle-btn" data-value="off">Disabled</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Beat 2 (First Ends)</label>
+          <input type="text" id="beat2" value="00:00:02.000" class="time-input" placeholder="00:00:00.000">
+        </div>
+
+        <div class="control-group">
+          <label>Beat 3 (Last Ends)</label>
+          <input type="text" id="beat3" value="00:00:04.000" class="time-input" placeholder="00:00:00.000">
+        </div>
+
+        <div class="control-group">
+          <label>Animation Order</label>
+          <select id="animOrder">
+            <option value="topDown">Top to Bottom (Cut 1 First)</option>
+            <option value="bottomUp">Bottom to Top (Cut N First)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Flip Angle Start/End <span class="badge">Degrees</span></label>
+          <div class="solid-size-row">
+            <div class="input-group">
+              <input type="number" id="flipStartAngle" value="0" step="1" title="Start Angle">
+              <div class="input-suffix">S</div>
+            </div>
+            <div class="input-group">
+              <input type="number" id="flipEndAngle" value="90" step="1" title="End Angle">
+              <div class="input-suffix">E</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Flip Axis & Pivot</label>
+          <div class="solid-size-row">
+            <div class="input-group" style="flex:1">
+              <input type="number" id="flipAxis" value="0" step="1" title="Axis Angle">
+              <div class="input-suffix">AXIS</div>
+            </div>
+            <div class="input-group" style="flex:1">
+              <input type="number" id="flipPivotX" value="0.5" step="0.1" title="Pivot X">
+              <div class="input-suffix">PX</div>
+            </div>
+            <div class="input-group" style="flex:1">
+              <input type="number" id="flipPivotY" value="0.5" step="0.1" title="Pivot Y">
+              <div class="input-suffix">PY</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-group" style="margin-top: 10px;">
+          <button id="openGraphBtn" style="width:100%; padding: 8px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+            Edit Easing Curve
+          </button>
+        </div>
+
+        <hr class="divider">
+
         <!-- Wipe Settings -->
         <div class="control-group">
           <label>Wipe Position <span class="badge">Constant</span></label>
@@ -270,10 +354,20 @@
 
   <!-- Toast notification -->
   <div class="toast" id="toast">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="20 6 9 17 4 12"/>
-    </svg>
-    <span id="toastMessage">Copied to clipboard!</span>
+    <div class="toast-message" id="toastMessage">Copied XML to clipboard!</div>
+  </div>
+
+  <!-- Graph Modal -->
+  <div class="modal-overlay" id="graphModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: var(--bg-deep); border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); width: 90%; max-width: 1200px; height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
+      <div class="modal-header" style="padding: 16px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-primary);">Easing Curve Editor</h3>
+        <button id="closeGraphBtn" style="background: transparent; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
+      </div>
+      <div class="modal-body" style="flex: 1; position: relative;">
+        <iframe id="graphIframe" src="../Graph.html" style="width: 100%; height: 100%; border: none;"></iframe>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

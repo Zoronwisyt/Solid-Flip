@@ -20,6 +20,18 @@
     wipeAngle: 0,
     wipeSoftness: 0,
     aspectLocked: true,
+    projectDurationStr: '00:00:05.000',
+    fps: 60,
+    beat2Str: '00:00:02.000',
+    beat3Str: '00:00:04.000',
+    animOrder: 'topDown',
+    flipEnabled: true,
+    flipStartAngle: 0,
+    flipEndAngle: 90,
+    flipAxis: 0,
+    flipPivotX: 0.5,
+    flipPivotY: 0.5,
+    flipEasing: '0.25, 0.10, 0.25, 1.00',
   };
 
   // ---- DOM References ----
@@ -43,6 +55,23 @@
   const wipeAngleValue = $('#wipeAngleValue');
   const wipeSoftnessInput = $('#wipeSoftness');
   const wipeSoftnessValue = $('#wipeSoftnessValue');
+
+  // Animation & Timing
+  const projectDurationInput = $('#projectDuration');
+  const projectFpsInput = $('#projectFps');
+  const beat2Input = $('#beat2');
+  const beat3Input = $('#beat3');
+  const animOrderSelect = $('#animOrder');
+  const flipToggleGroup = $('#flipToggle');
+  const flipStartAngleInput = $('#flipStartAngle');
+  const flipEndAngleInput = $('#flipEndAngle');
+  const flipAxisInput = $('#flipAxis');
+  const flipPivotXInput = $('#flipPivotX');
+  const flipPivotYInput = $('#flipPivotY');
+  
+  const openGraphBtn = $('#openGraphBtn');
+  const closeGraphBtn = $('#closeGraphBtn');
+  const graphModal = $('#graphModal');
 
   // Display
   const wipeXDisplay = $('#wipeXDisplay');
@@ -101,14 +130,40 @@
     setTimeout(() => toast.classList.remove('show'), 2200);
   }
 
+  function parseTimeToSeconds(timeStr) {
+    const parts = timeStr.split(':');
+    let h = 0, m = 0, s = 0;
+    if (parts.length === 3) {
+      h = parseInt(parts[0]) || 0;
+      m = parseInt(parts[1]) || 0;
+      s = parseFloat(parts[2]) || 0;
+    } else if (parts.length === 2) {
+      m = parseInt(parts[0]) || 0;
+      s = parseFloat(parts[1]) || 0;
+    } else {
+      s = parseFloat(timeStr) || 0;
+    }
+    return h * 3600 + m * 60 + s;
+  }
+
   // ---- Layer Calculation ----
   function calculateLayers() {
     const layers = [];
     const n = state.layerCount;
 
+    const b1 = 0; // Hardcoded to 0 as requested
+    const b2 = parseTimeToSeconds(state.beat2Str);
+    const b3 = parseTimeToSeconds(state.beat3Str);
+
     for (let i = 0; i < n; i++) {
       const startVal = i / n;
       const endVal = (i + 1) / n;
+
+      let orderIdx = (state.animOrder === 'bottomUp') ? (n - 1 - i) : i;
+      let flipEnd = b2;
+      if (n > 1) {
+        flipEnd = b2 + (b3 - b2) * (orderIdx / (n - 1));
+      }
 
       layers.push({
         index: i + 1,
@@ -117,7 +172,9 @@
         width: state.solidWidth,
         height: state.solidHeight,
         wipeStart: startVal,
-        wipeEnd: endVal
+        wipeEnd: endVal,
+        flipStartT: b1,
+        flipEndT: flipEnd
       });
     }
     return layers;
@@ -164,7 +221,7 @@
 
       let lx, ly, lw, lh;
 
-      if (state.splitDirection === 'horizontal') {
+      if (state.splitDirection === 'vertical') {
         lx = solidLeft;
         lw = solidW;
         ly = solidTop + layer.wipeStart * solidH;
@@ -208,7 +265,7 @@
       const solidTop = (layer.locY * scaleF) - (solidH / 2);
 
       ctx.beginPath();
-      if (state.splitDirection === 'horizontal') {
+      if (state.splitDirection === 'vertical') {
         const y = solidTop + layer.wipeStart * solidH;
         ctx.moveTo(solidLeft, y);
         ctx.lineTo(solidLeft + solidW, y);
@@ -298,8 +355,8 @@
   function generateAlightMotionXML() {
     const layers = calculateLayers();
     const t = '  '; // indent
-    const totalTime = 3999;
-    const fps = 30;
+    const totalTimeMs = Math.round(parseTimeToSeconds(state.projectDurationStr) * 1000);
+    const fps = state.fps;
 
     let hexColor = state.solidColor.toUpperCase();
     if (hexColor.startsWith('#')) hexColor = hexColor.substring(1);
@@ -311,19 +368,19 @@
     xml += `Exported: ${new Date().toLocaleString()}\n`;
     xml += `-->\n`;
 
-    xml += `<scene title="Wipe Layers ${state.layerCount}x" width="${state.projectWidth}" height="${state.projectHeight}" exportWidth="${state.projectWidth}" exportHeight="${state.projectHeight}" bgcolor="#FF000000" totalTime="${totalTime}" fps="${fps}" modifiedTime="${Date.now()}" amver="859" ffver="107" am="com.alightcreative.motion/6.2.53" amplatform="ios" precompose="dynamicResolution" retime="freeze">\n`;
+    xml += `<scene title="Wipe Layers ${state.layerCount}x" width="${state.projectWidth}" height="${state.projectHeight}" exportWidth="${state.projectWidth}" exportHeight="${state.projectHeight}" bgcolor="#FF000000" totalTime="${totalTimeMs}" fps="${fps}" modifiedTime="${Date.now()}" amver="859" ffver="107" am="com.alightcreative.motion/6.2.53" amplatform="ios" precompose="dynamicResolution" retime="freeze">\n`;
 
     xml += `${t}<bookmark t="0"/>\n`;
     xml += `${t}<bookmark t="5000"/>\n`;
 
-    const effAngle = state.splitDirection === 'horizontal' ? 0 : 90;
+    const effAngle = state.splitDirection === 'vertical' ? 0 : 90;
 
     // Generate layers in reverse so layer 1 is at the bottom (matching AM export order)
     for (let i = layers.length - 1; i >= 0; i--) {
       const layer = layers[i];
       const layerLabel = i === 0 ? "Rectangle 1" : `Rectangle 1 Copy${i > 1 ? ' ' + i : ''}`;
 
-      xml += `${t}<shape id="${layer.index}" label="${layerLabel}" startTime="0" endTime="${totalTime}" fillType="color" s=".rect">\n`;
+      xml += `${t}<shape id="${layer.index}" label="${layerLabel}" startTime="0" endTime="${totalTimeMs}" fillType="color" s=".rect">\n`;
 
       xml += `${t}${t}<transform>\n`;
       xml += `${t}${t}${t}<location value="${layer.locX.toFixed(6)},${layer.locY.toFixed(6)},0.000000"/>\n`;
@@ -346,6 +403,30 @@
       }
 
       xml += `${t}${t}</effect>\n`;
+
+      if (state.flipEnabled) {
+        // AM keyframes use a normalized time (0.0 to 1.0) relative to the layer's duration
+        const projDurationSec = parseTimeToSeconds(state.projectDurationStr) || 1;
+        const normStart = layer.flipStartT / projDurationSec;
+        const normEnd = layer.flipEndT / projDurationSec;
+
+        // Flip Layer Effect
+        xml += `${t}${t}<effect id="com.alightcreative.effects.flip3" locallyApplied="true">\n`;
+        xml += `${t}${t}${t}<property name="axis" type="float" value="${state.flipAxis.toFixed(6)}"/>\n`;
+        xml += `${t}${t}${t}<property name="pivot" type="vec2" value="${state.flipPivotX.toFixed(6)},${state.flipPivotY.toFixed(6)}"/>\n`;
+        xml += `${t}${t}${t}<property name="angle" type="float">\n`;
+        xml += `${t}${t}${t}${t}<kf t="${normStart.toFixed(6)}" v="${state.flipStartAngle.toFixed(6)}" />\n`;
+        
+        let easingStr = '';
+        if (state.flipEasing) {
+          const bezierParts = state.flipEasing.split(',').map(s => s.trim());
+          easingStr = ` e="cubicBezier ${bezierParts.join(' ')}"`;
+        }
+        
+        xml += `${t}${t}${t}${t}<kf t="${normEnd.toFixed(6)}" v="${state.flipEndAngle.toFixed(6)}"${easingStr} />\n`;
+        xml += `${t}${t}${t}</property>\n`;
+        xml += `${t}${t}</effect>\n`;
+      }
 
       // AM interprets 'size' on vector shapes as half-extents (radius from center)
       xml += `${t}${t}<property name="size" type="vec2" value="${(layer.width / 2).toFixed(6)},${(layer.height / 2).toFixed(6)}"/>\n`;
@@ -490,6 +571,73 @@
       fullUpdate();
     });
   }
+
+  // Animation & Timing
+  projectDurationInput.addEventListener('input', () => {
+    state.projectDurationStr = projectDurationInput.value;
+    fullUpdate();
+  });
+  projectFpsInput.addEventListener('input', () => {
+    state.fps = parseInt(projectFpsInput.value) || 60;
+    fullUpdate();
+  });
+  beat2Input.addEventListener('input', () => {
+    state.beat2Str = beat2Input.value;
+    fullUpdate();
+  });
+  beat3Input.addEventListener('input', () => {
+    state.beat3Str = beat3Input.value;
+    fullUpdate();
+  });
+  animOrderSelect.addEventListener('change', () => {
+    state.animOrder = animOrderSelect.value;
+    fullUpdate();
+  });
+  flipToggleGroup.addEventListener('click', (e) => {
+    const btn = e.target.closest('.toggle-btn');
+    if (!btn) return;
+    flipToggleGroup.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.flipEnabled = btn.dataset.value === 'on';
+    fullUpdate();
+  });
+  flipStartAngleInput.addEventListener('input', () => {
+    state.flipStartAngle = parseFloat(flipStartAngleInput.value) || 0;
+    fullUpdate();
+  });
+  flipEndAngleInput.addEventListener('input', () => {
+    state.flipEndAngle = parseFloat(flipEndAngleInput.value) || 0;
+    fullUpdate();
+  });
+  flipAxisInput.addEventListener('input', () => {
+    state.flipAxis = parseFloat(flipAxisInput.value) || 0;
+    fullUpdate();
+  });
+  flipPivotXInput.addEventListener('input', () => {
+    state.flipPivotX = parseFloat(flipPivotXInput.value) || 0;
+    fullUpdate();
+  });
+  flipPivotYInput.addEventListener('input', () => {
+    state.flipPivotY = parseFloat(flipPivotYInput.value) || 0;
+    fullUpdate();
+  });
+
+  // Modal and Graph Message Listener
+  openGraphBtn.addEventListener('click', () => {
+    graphModal.style.display = 'flex';
+  });
+  
+  closeGraphBtn.addEventListener('click', () => {
+    graphModal.style.display = 'none';
+  });
+
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'BEZIER_UPDATE') {
+      const { x1, y1, x2, y2 } = event.data;
+      state.flipEasing = `${x1}, ${y1}, ${x2}, ${y2}`;
+      fullUpdate();
+    }
+  });
 
   // Copy XML
   copyXmlBtn.addEventListener('click', async () => {

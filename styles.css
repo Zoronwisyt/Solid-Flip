@@ -447,7 +447,7 @@ select option {
   display: flex;
 }
 
-.input-group input {
+.input-group input, .time-input {
   width: 100%;
   padding: 7px 10px;
   padding-right: 28px;
