@@ -110,6 +110,7 @@ body {
   grid-row:2;
   display:grid;
   grid-template-columns:300px 1fr 260px;
+  min-height:0;
   overflow:hidden;
 }
 
@@ -119,6 +120,7 @@ body {
   border-right:1px solid var(--border);
   display:flex;
   flex-direction:column;
+  min-height:0;
   overflow:hidden;
 }
 
@@ -204,6 +206,9 @@ body {
   position:relative;
   align-items:center;
   justify-content:center;
+  min-width:0;
+  min-height:0;
+  padding:24px;
   overflow:hidden;
 }
 
@@ -220,10 +225,13 @@ body {
   display:flex;
   align-items:center;
   justify-content:center;
+  width:min(420px, 100%);
 }
 
 .graph-canvas {
   display:block;
+  width:100%;
+  height:auto;
   user-select:none;
   touch-action:none;
   cursor:crosshair;
@@ -244,8 +252,11 @@ body {
 
 .coord-strip {
   display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
   gap:8px;
   margin-top:20px;
+  max-width:100%;
 }
 
 .coord-pill {
@@ -274,6 +285,7 @@ body {
   border-left:1px solid var(--border);
   display:flex;
   flex-direction:column;
+  min-height:0;
   overflow:hidden;
 }
 
@@ -676,6 +688,195 @@ input[type=range]::-webkit-slider-thumb:active{transform:scale(1.3);cursor:grabb
 
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 .recording .status-dot{background:var(--accent-b);animation:blink 1s infinite}
+
+@media (max-width: 1080px) {
+  html,body {
+    height:auto;
+    min-height:100%;
+    overflow:auto;
+  }
+
+  body {
+    display:block;
+    min-height:100svh;
+  }
+
+  .topbar {
+    position:sticky;
+    top:0;
+    min-height:48px;
+  }
+
+  .workspace {
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) 280px;
+    grid-template-rows:auto auto;
+    min-height:calc(100svh - 48px);
+    overflow:visible;
+  }
+
+  .center-panel {
+    grid-column:1;
+    grid-row:1;
+    min-height:520px;
+  }
+
+  .sidebar-right {
+    grid-column:2;
+    grid-row:1;
+    overflow:visible;
+  }
+
+  .sidebar-left {
+    grid-column:1 / -1;
+    grid-row:2;
+    border-right:0;
+    border-top:1px solid var(--border);
+    overflow:visible;
+  }
+
+  .analysis-panel {
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) minmax(260px, 0.8fr);
+    align-items:start;
+  }
+
+  .analysis-tags,
+  .analysis-summary,
+  .use-case {
+    grid-column:1;
+  }
+
+  .analysis-metrics {
+    grid-column:2;
+    grid-row:1 / span 3;
+  }
+
+  .presets-scroll {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    max-height:260px;
+    overflow:auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    flex-wrap:wrap;
+    gap:8px;
+    padding:10px 14px;
+  }
+
+  .divider-v,
+  .topbar-label {
+    display:none;
+  }
+
+  .topbar-code {
+    order:3;
+    width:100%;
+    min-width:0;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  #topbar-code-text {
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .workspace {
+    display:flex;
+    flex-direction:column;
+    min-height:auto;
+  }
+
+  .center-panel {
+    order:1;
+    min-height:auto;
+    padding:18px 16px 20px;
+    overflow:visible;
+  }
+
+  .graph-wrap {
+    width:min(100%, 440px);
+  }
+
+  .coord-strip {
+    width:100%;
+    margin-top:14px;
+  }
+
+  .coord-pill {
+    flex:1 1 150px;
+    justify-content:center;
+    min-width:0;
+    padding:7px 10px;
+  }
+
+  .coord-pill span:last-child {
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .sidebar-right {
+    order:2;
+    border-left:0;
+    border-top:1px solid var(--border);
+    overflow:visible;
+  }
+
+  .preview-section {
+    flex:none;
+  }
+
+  .preview-stage {
+    min-height:92px;
+  }
+
+  .prop-chips,
+  .input-grid,
+  .analysis-metrics {
+    grid-template-columns:1fr 1fr;
+  }
+
+  .sidebar-left {
+    order:3;
+  }
+
+  .analysis-panel {
+    display:flex;
+  }
+
+  .presets-scroll {
+    grid-template-columns:1fr;
+    max-height:none;
+  }
+}
+
+@media (max-width: 420px) {
+  .center-panel {
+    padding-inline:12px;
+  }
+
+  .axis-label.x0,
+  .axis-label.x1 {
+    bottom:-18px;
+  }
+
+  .axis-label.y0,
+  .axis-label.y1 {
+    left:-20px;
+  }
+
+  .coord-strip {
+    margin-top:22px;
+  }
+}
 </style>
 </head>
 <body>

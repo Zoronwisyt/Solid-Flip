@@ -358,14 +358,15 @@
   </div>
 
   <!-- Graph Modal -->
-  <div class="modal-overlay" id="graphModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
-    <div class="modal-content" style="background: var(--bg-deep); border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); width: 90%; max-width: 1200px; height: 85vh; display: flex; flex-direction: column; overflow: hidden; margin: auto;">
-      <div class="modal-header" style="padding: 16px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-primary);">Easing Curve Editor</h3>
-        <button id="closeGraphBtn" style="background: transparent; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+  <div class="modal-overlay graph-modal" id="graphModal">
+    <div class="graph-modal-content">
+      <div class="graph-modal-header">
+        <h3>Easing Curve Editor</h3>
+        <a class="graph-modal-link" href="Graph.html" target="_blank" rel="noopener">Open full screen</a>
+        <button class="graph-modal-close" id="closeGraphBtn" aria-label="Close graph editor">&times;</button>
       </div>
-      <div class="modal-body" style="flex: 1; position: relative; overflow: hidden;">
-        <iframe id="graphIframe" src="Graph.html" style="width: 100%; height: 100%; border: none;"></iframe>
+      <div class="graph-modal-body">
+        <iframe id="graphIframe" src="Graph.html" title="Easing curve editor"></iframe>
       </div>
     </div>
   </div>

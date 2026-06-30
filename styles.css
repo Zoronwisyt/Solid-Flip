@@ -932,6 +932,92 @@ input[type="range"]::-moz-range-thumb {
   transform: translateX(-50%) translateY(0);
 }
 
+/* --- Graph Modal --- */
+.graph-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.graph-modal-content {
+  width: min(1200px, 100%);
+  height: min(85svh, 900px);
+  min-height: 520px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+}
+
+.graph-modal-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.graph-modal-header h3 {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.graph-modal-link {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.graph-modal-link:hover {
+  color: var(--text-primary);
+}
+
+.graph-modal-close {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--text-secondary);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.graph-modal-close:hover {
+  color: var(--text-primary);
+}
+
+.graph-modal-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.graph-modal-body iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 /* --- Responsive --- */
 @media (max-width: 1200px) {
   main {
@@ -968,6 +1054,29 @@ input[type="range"]::-moz-range-thumb {
 
   .canvas-container {
     min-height: 300px;
+  }
+
+  .graph-modal {
+    padding: 10px;
+  }
+
+  .graph-modal-content {
+    width: 100%;
+    height: calc(100svh - 20px);
+    min-height: 0;
+    border-radius: var(--radius-md);
+  }
+
+  .graph-modal-header {
+    padding: 12px 14px;
+  }
+
+  .graph-modal-header h3 {
+    font-size: 0.95rem;
+  }
+
+  .graph-modal-link {
+    font-size: 0.78rem;
   }
 }
 
