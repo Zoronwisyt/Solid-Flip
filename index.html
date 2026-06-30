@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wipe Layer Generator — Multi-Layer Wipe Effect Tool</title>
+  <meta name="description" content="Create multi-layer wipe effects with precise control. Generate layer configurations and export as Alight Motion XML.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Animated background orbs -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <header id="app-header">
+    <div class="header-content">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <rect x="2" y="2" width="28" height="28" rx="6" stroke="url(#logoGrad)" stroke-width="2.5"/>
+            <line x1="2" y1="12" x2="30" y2="12" stroke="url(#logoGrad)" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <line x1="2" y1="20" x2="30" y2="20" stroke="url(#logoGrad)" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <circle cx="16" cy="16" r="3" fill="url(#logoGrad)"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32">
+                <stop stop-color="#a78bfa"/>
+                <stop offset="1" stop-color="#06b6d4"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div>
+          <h1>Wipe Layer Generator</h1>
+          <p class="subtitle">Multi-layer wipe effects · Alight Motion XML export</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="app-main">
+    <!-- Left: Controls Panel -->
+    <section class="panel controls-panel" id="controls-panel">
+      <div class="panel-header">
+        <h2>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Configuration
+        </h2>
+      </div>
+
+      <div class="controls-body">
+        <!-- Layer Count -->
+        <div class="control-group">
+          <label for="layerCount">Number of Layers</label>
+          <div class="stepper-input">
+            <button class="stepper-btn" id="layerMinus" aria-label="Decrease layers">−</button>
+            <input type="number" id="layerCount" min="2" max="50" value="5">
+            <button class="stepper-btn" id="layerPlus" aria-label="Increase layers">+</button>
+          </div>
+          <div class="control-hint">Split solid into 2–50 layers</div>
+        </div>
+
+        <!-- Split Direction -->
+        <div class="control-group">
+          <label>Split Direction</label>
+          <div class="toggle-group" id="splitDirection">
+            <button class="toggle-btn active" data-value="horizontal">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="1" y="1" width="14" height="14" rx="2"/>
+                <line x1="1" y1="5.5" x2="15" y2="5.5"/>
+                <line x1="1" y1="10.5" x2="15" y2="10.5"/>
+              </svg>
+              Horizontal
+            </button>
+            <button class="toggle-btn" data-value="vertical">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="1" y="1" width="14" height="14" rx="2"/>
+                <line x1="5.5" y1="1" x2="5.5" y2="15"/>
+                <line x1="10.5" y1="1" x2="10.5" y2="15"/>
+              </svg>
+              Vertical
+            </button>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Project Size -->
+        <div class="control-group">
+          <label for="projectScale">Project Size</label>
+          <select id="projectScale">
+            <option value="1">1x (1080 × 1350)</option>
+            <option value="0.5">0.5x (540 × 675)</option>
+            <option value="2">2x (2160 × 2700)</option>
+          </select>
+        </div>
+
+        <!-- Solid Size -->
+        <div class="control-group">
+          <label>Solid Size</label>
+          <div class="solid-size-row">
+            <div class="input-group">
+              <input type="number" id="solidWidth" value="1080" min="10" step="any" title="Width">
+              <div class="input-suffix">W</div>
+            </div>
+            <button class="link-btn active" id="aspectLinkBtn" title="Link/Unlink Aspect Ratio (4:5)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+            </button>
+            <div class="input-group">
+              <input type="number" id="solidHeight" value="1350" min="10" step="any" title="Height">
+              <div class="input-suffix">H</div>
+            </div>
+          </div>
+          <div class="control-hint" id="aspectHint">Ratio locked at 4:5</div>
+        </div>
+
+        <!-- Solid Color -->
+        <div class="control-group">
+          <label for="solidColor">Solid Color</label>
+          <div class="color-picker-row">
+            <input type="color" id="solidColor" value="#64E4DC">
+            <span class="color-value" id="colorValue">#64E4DC</span>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Wipe Settings -->
+        <div class="control-group">
+          <label>Wipe Position <span class="badge">Constant</span></label>
+          <div class="readonly-row">
+            <div class="readonly-field">
+              <span class="field-label">X</span>
+              <span class="field-value" id="wipeXDisplay">540</span>
+            </div>
+            <div class="readonly-field">
+              <span class="field-label">Y</span>
+              <span class="field-value" id="wipeYDisplay">675</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Wipe Start / End <span class="badge">Constant</span></label>
+          <div class="readonly-row">
+            <div class="readonly-field">
+              <span class="field-label">Start</span>
+              <span class="field-value" id="wipeStartDisplay">0</span>
+            </div>
+            <div class="readonly-field">
+              <span class="field-label">End</span>
+              <span class="field-value" id="wipeEndDisplay">100</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="wipeAngle">Wipe Angle</label>
+          <div class="range-row">
+            <input type="range" id="wipeAngle" min="0" max="360" value="0" step="1">
+            <span class="range-value" id="wipeAngleValue">0°</span>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="wipeSoftness">Wipe Softness</label>
+          <div class="range-row">
+            <input type="range" id="wipeSoftness" min="0" max="100" value="0" step="1">
+            <span class="range-value" id="wipeSoftnessValue">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Center: Preview -->
+    <section class="panel preview-panel" id="preview-panel">
+      <div class="panel-header">
+        <h2>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+          Preview
+        </h2>
+        <div class="preview-dimensions" id="previewDimensions">1080 × 1350</div>
+      </div>
+
+      <div class="canvas-container" id="canvasContainer">
+        <canvas id="previewCanvas"></canvas>
+        <div class="crosshair-label" id="crosshairLabel">Center: 540, 675</div>
+      </div>
+
+      <!-- Formulas Display -->
+      <div class="formulas-card" id="formulasCard">
+        <h3>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
+          </svg>
+          Layer Formulas
+        </h3>
+        <div class="formula-content" id="formulaContent"></div>
+      </div>
+    </section>
+
+    <!-- Right: Data Panel -->
+    <section class="panel data-panel" id="data-panel">
+      <div class="panel-header">
+        <h2>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>
+          </svg>
+          Layer Data
+        </h2>
+      </div>
+
+      <!-- Layer Table -->
+      <div class="table-container" id="tableContainer">
+        <table id="layerTable">
+          <thead>
+            <tr>
+              <th>Cut</th>
+              <th>Loc X</th>
+              <th>Loc Y</th>
+              <th>Size</th>
+              <th>Start</th>
+              <th>End</th>
+            </tr>
+          </thead>
+          <tbody id="layerTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- XML Preview -->
+      <div class="xml-section">
+        <div class="xml-header">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+            XML Output
+          </h3>
+          <div class="xml-actions">
+            <button class="icon-btn" id="copyXmlBtn" title="Copy to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+            <button class="icon-btn" id="downloadXmlBtn" title="Download XML">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="xml-code-container">
+          <pre id="xmlCode"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    <span id="toastMessage">Copied to clipboard!</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
