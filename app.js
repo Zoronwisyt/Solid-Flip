@@ -32,6 +32,8 @@
     flipPivotX: 0.5,
     flipPivotY: 0.5,
     flipEasing: '0.25, 0.10, 0.25, 1.00',
+    isPlaying: false,
+    currentTimeSec: 0,
   };
 
   // ---- DOM References ----
@@ -80,6 +82,12 @@
   const crosshairLabel = $('#crosshairLabel');
   const formulaContent = $('#formulaContent');
   const xmlCode = $('#xmlCode');
+  
+  // Playback
+  const playBtn = $('#playBtn');
+  const playIcon = $('#playIcon');
+  const playbackScrubber = $('#playbackScrubber');
+  const playbackTimeDisplay = $('#playbackTimeDisplay');
 
   // Buttons
   const toggleXmlBtn = $('#toggleXmlBtn');
@@ -124,6 +132,24 @@
     const offset = (index / Math.max(1, total - 1) - 0.5) * range;
     const newL = Math.max(10, Math.min(90, l + offset));
     return `hsl(${h}, ${s}%, ${newL}%)`;
+  }
+
+  function bezierY(t, x1, y1, x2, y2) {
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+    function sampleX(u) { return ((ax * u + bx) * u + cx) * u; }
+    function sampleY(u) { return ((ay * u + by) * u + cy) * u; }
+    function derivX(u) { return (3 * ax * u + 2 * bx) * u + cx; }
+    let u = t;
+    for (let i = 0; i < 8; i++) {
+      const xErr = sampleX(u) - t;
+      if (Math.abs(xErr) < 1e-6) break;
+      const d = Math.abs(derivX(u)) < 1e-6 ? 1e-6 : derivX(u);
+      u -= xErr / d;
+    }
+    return sampleY(Math.max(0, Math.min(1, u)));
   }
 
   function showToast(message) {
@@ -185,7 +211,7 @@
   }
 
   // ---- Canvas Rendering ----
-  function renderPreview() {
+  function renderPreview(timeSec = state.currentTimeSec) {
     const container = $('#canvasContainer');
     const maxW = container.clientWidth - 48;
     const maxH = container.clientHeight - 48;
@@ -218,10 +244,41 @@
     layers.forEach((layer, idx) => {
       ctx.save();
 
+      let flipAngle = state.flipStartAngle;
+      if (state.flipEnabled && timeSec > layer.flipStartT) {
+        if (timeSec >= layer.flipEndT) {
+          flipAngle = state.flipEndAngle;
+        } else {
+          const progress = (timeSec - layer.flipStartT) / (layer.flipEndT - layer.flipStartT);
+          const [x1, y1, x2, y2] = state.flipEasing.split(',').map(Number);
+          const eased = bezierY(progress, x1, y1, x2, y2);
+          flipAngle = state.flipStartAngle + (state.flipEndAngle - state.flipStartAngle) * eased;
+        }
+      }
+
       const solidW = layer.width * scaleF;
       const solidH = layer.height * scaleF;
       const solidLeft = (layer.locX * scaleF) - (solidW / 2);
       const solidTop = (layer.locY * scaleF) - (solidH / 2);
+
+      // --- 3D FLIP EMULATION ---
+      if (state.flipEnabled) {
+        const px = solidLeft + (state.flipPivotX * solidW);
+        const py = solidTop + (state.flipPivotY * solidH);
+        
+        ctx.translate(px, py);
+        
+        // In 2D, scaleX simulates a Y-axis flip (left/right). Axis 0 = left/right flip in Alight Motion.
+        // So we rotate by the axis angle to align, scale X by cos(flipAngle), then rotate back.
+        const axisRad = (state.flipAxis * Math.PI) / 180;
+        ctx.rotate(-axisRad);
+        
+        const flipRad = (flipAngle * Math.PI) / 180;
+        ctx.scale(Math.cos(flipRad), 1);
+        
+        ctx.rotate(axisRad);
+        ctx.translate(-px, -py);
+      }
 
       let lx, ly, lw, lh;
 
@@ -463,9 +520,59 @@
     updateProjectSize();
     updateFormulas();
     updateLayerTable();
+    updateScrubberUI();
     renderXML();
     renderPreview();
   }
+
+  // ---- Playback Loop ----
+  let animFrameId = null;
+  let lastTimeMs = 0;
+
+  function togglePlay() {
+    state.isPlaying = !state.isPlaying;
+    if (state.isPlaying) {
+      playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+      const durationSec = parseTimeToSeconds(state.projectDurationStr);
+      if (state.currentTimeSec >= durationSec) state.currentTimeSec = 0;
+      lastTimeMs = performance.now();
+      animFrameId = requestAnimationFrame(playLoop);
+    } else {
+      playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+      cancelAnimationFrame(animFrameId);
+    }
+  }
+
+  function playLoop(now) {
+    if (!state.isPlaying) return;
+    const deltaMs = now - lastTimeMs;
+    lastTimeMs = now;
+    state.currentTimeSec += deltaMs / 1000;
+    
+    const durationSec = parseTimeToSeconds(state.projectDurationStr) || 1;
+    if (state.currentTimeSec >= durationSec) {
+      state.currentTimeSec = durationSec;
+      togglePlay();
+    }
+    
+    updateScrubberUI();
+    renderPreview(state.currentTimeSec);
+    if (state.isPlaying) animFrameId = requestAnimationFrame(playLoop);
+  }
+
+  function updateScrubberUI() {
+    const durationSec = parseTimeToSeconds(state.projectDurationStr) || 1;
+    playbackScrubber.max = durationSec;
+    playbackScrubber.value = state.currentTimeSec;
+    playbackTimeDisplay.textContent = state.currentTimeSec.toFixed(2) + 's';
+  }
+
+  playBtn.addEventListener('click', togglePlay);
+  playbackScrubber.addEventListener('input', () => {
+    state.currentTimeSec = parseFloat(playbackScrubber.value);
+    updateScrubberUI();
+    renderPreview(state.currentTimeSec);
+  });
 
   // ---- Event Handlers ----
 
