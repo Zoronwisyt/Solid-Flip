@@ -22,6 +22,7 @@
     aspectLocked: true,
     projectDurationStr: '00:05:00',
     fps: 60,
+    beat1Str: '00:00:00',
     beat2Str: '00:02:00',
     beat3Str: '00:04:00',
     animOrder: 'topDown',
@@ -61,6 +62,7 @@
   // Animation & Timing
   const projectDurationInput = $('#projectDuration');
   const projectFpsInput = $('#projectFps');
+  const beat1Input = $('#beat1');
   const beat2Input = $('#beat2');
   const beat3Input = $('#beat3');
   const animOrderSelect = $('#animOrder');
@@ -181,7 +183,7 @@
     const layers = [];
     const n = state.layerCount;
 
-    const b1 = 0; // Hardcoded to 0 as requested
+    const b1 = parseTimeToSeconds(state.beat1Str);
     const b2 = parseTimeToSeconds(state.beat2Str);
     const b3 = parseTimeToSeconds(state.beat3Str);
 
@@ -282,7 +284,7 @@
 
       let lx, ly, lw, lh;
 
-      if (state.splitDirection === 'vertical') {
+      if (state.splitDirection === 'horizontal') {
         lx = solidLeft;
         lw = solidW;
         ly = solidTop + layer.wipeStart * solidH;
@@ -326,7 +328,7 @@
       const solidTop = (layer.locY * scaleF) - (solidH / 2);
 
       ctx.beginPath();
-      if (state.splitDirection === 'vertical') {
+      if (state.splitDirection === 'horizontal') {
         const y = solidTop + layer.wipeStart * solidH;
         ctx.moveTo(solidLeft, y);
         ctx.lineTo(solidLeft + solidW, y);
@@ -434,7 +436,7 @@
     xml += `${t}<bookmark t="0"/>\n`;
     xml += `${t}<bookmark t="5000"/>\n`;
 
-    const effAngle = state.splitDirection === 'vertical' ? 0 : 90;
+    const effAngle = state.splitDirection === 'horizontal' ? 90 : 0;
 
     // Generate layers in reverse so layer 1 is at the bottom (matching AM export order)
     for (let i = layers.length - 1; i >= 0; i--) {
@@ -690,6 +692,10 @@
   });
   projectFpsInput.addEventListener('input', () => {
     state.fps = parseInt(projectFpsInput.value) || 60;
+    fullUpdate();
+  });
+  beat1Input.addEventListener('input', () => {
+    state.beat1Str = beat1Input.value;
     fullUpdate();
   });
   beat2Input.addEventListener('input', () => {

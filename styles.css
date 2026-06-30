@@ -947,6 +947,68 @@ input[type="range"]::-moz-range-thumb {
 .graph-modal-content {
   width: min(1200px, 100%);
   height: min(85svh, 900px);
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.graph-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.graph-modal-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.graph-modal-link {
+  font-size: 0.8rem;
+  color: var(--accent-cyan);
+  text-decoration: none;
+  margin-left: auto;
+  margin-right: 16px;
+}
+
+.graph-modal-link:hover {
+  text-decoration: underline;
+}
+
+.graph-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.graph-modal-close:hover {
+  color: var(--text-primary);
+}
+
+.graph-modal-body {
+  flex: 1;
+  position: relative;
+}
+
+.graph-modal-body iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
   min-height: 520px;
   margin: auto;
   display: flex;
