@@ -20,10 +20,10 @@
     wipeAngle: 0,
     wipeSoftness: 0,
     aspectLocked: true,
-    projectDurationStr: '00:00:05.000',
+    projectDurationStr: '00:05:00',
     fps: 60,
-    beat2Str: '00:00:02.000',
-    beat3Str: '00:00:04.000',
+    beat2Str: '00:02:00',
+    beat3Str: '00:04:00',
     animOrder: 'topDown',
     flipEnabled: true,
     flipStartAngle: 0,
@@ -131,19 +131,21 @@
   }
 
   function parseTimeToSeconds(timeStr) {
+    // Format: MM:SS:FF where FF = frame number (0 to fps-1)
     const parts = timeStr.split(':');
-    let h = 0, m = 0, s = 0;
+    let m = 0, s = 0, f = 0;
     if (parts.length === 3) {
-      h = parseInt(parts[0]) || 0;
-      m = parseInt(parts[1]) || 0;
-      s = parseFloat(parts[2]) || 0;
-    } else if (parts.length === 2) {
       m = parseInt(parts[0]) || 0;
-      s = parseFloat(parts[1]) || 0;
+      s = parseInt(parts[1]) || 0;
+      f = parseInt(parts[2]) || 0;
+    } else if (parts.length === 2) {
+      s = parseInt(parts[0]) || 0;
+      f = parseInt(parts[1]) || 0;
     } else {
       s = parseFloat(timeStr) || 0;
+      return s;
     }
-    return h * 3600 + m * 60 + s;
+    return m * 60 + s + (f / state.fps);
   }
 
   // ---- Layer Calculation ----
