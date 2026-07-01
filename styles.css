@@ -547,6 +547,31 @@ input[type="color"]:hover {
   border-color: var(--accent-violet);
 }
 
+/* --- Section Blocks --- */
+.section-block {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--gap-md);
+  margin-bottom: var(--gap-md);
+}
+
+.section-header {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  margin-bottom: var(--gap-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.section-block .control-group {
+  margin-bottom: var(--gap-sm);
+}
+.section-block .control-group:last-child {
+  margin-bottom: 0;
+}
+
 .color-value {
   font-family: var(--font-mono);
   font-size: 0.82rem;

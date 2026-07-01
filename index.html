@@ -56,17 +56,6 @@
       </div>
 
       <div class="controls-body">
-        <!-- Layer Count -->
-        <div class="control-group">
-          <label for="layerCount">Number of Layers</label>
-          <div class="stepper-input">
-            <button class="stepper-btn" id="layerMinus" aria-label="Decrease layers">−</button>
-            <input type="number" id="layerCount" min="2" max="50" value="5">
-            <button class="stepper-btn" id="layerPlus" aria-label="Increase layers">+</button>
-          </div>
-          <div class="control-hint">Split solid into 2–50 layers</div>
-        </div>
-
         <!-- Split Direction -->
         <div class="control-group">
           <label>Split Direction</label>
@@ -174,34 +163,8 @@
         </div>
 
         <div class="control-group">
-          <label>Animation Order</label>
-          <select id="animOrder">
-            <option value="topDown">Top to Bottom (Cut 1 First)</option>
-            <option value="bottomUp">Bottom to Top (Cut N First)</option>
-          </select>
-        </div>
-
-        <div class="control-group">
-          <label>Flip Angle Start/End <span class="badge">Degrees</span></label>
+          <label>Global Flip Pivot</label>
           <div class="solid-size-row">
-            <div class="input-group">
-              <input type="number" id="flipStartAngle" value="0" step="1" title="Start Angle">
-              <div class="input-suffix">S</div>
-            </div>
-            <div class="input-group">
-              <input type="number" id="flipEndAngle" value="90" step="1" title="End Angle">
-              <div class="input-suffix">E</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <label>Flip Axis & Pivot</label>
-          <div class="solid-size-row">
-            <div class="input-group" style="flex:1">
-              <input type="number" id="flipAxis" value="0" step="1" title="Axis Angle">
-              <div class="input-suffix">AXIS</div>
-            </div>
             <div class="input-group" style="flex:1">
               <input type="number" id="flipPivotX" value="0.5" step="0.1" title="Pivot X">
               <div class="input-suffix">PX</div>
@@ -211,6 +174,22 @@
               <div class="input-suffix">PY</div>
             </div>
           </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="control-group">
+          <label for="sectionCount">Number of Sections</label>
+          <div class="stepper-input">
+            <button class="stepper-btn" id="sectionMinus" aria-label="Decrease sections">−</button>
+            <input type="number" id="sectionCount" min="1" max="10" value="1">
+            <button class="stepper-btn" id="sectionPlus" aria-label="Increase sections">+</button>
+          </div>
+          <div class="control-hint">Divide layers into groups for different flip settings</div>
+        </div>
+
+        <div id="sectionsContainer">
+          <!-- Dynamic sections go here -->
         </div>
 
         <div class="control-group" style="margin-top: 10px;">
@@ -331,8 +310,8 @@
               <th>Loc X</th>
               <th>Loc Y</th>
               <th>Size</th>
-              <th>Start</th>
-              <th>End</th>
+              <th>Wipe X</th>
+              <th>Wipe Y</th>
             </tr>
           </thead>
           <tbody id="layerTableBody"></tbody>
@@ -393,6 +372,6 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>
