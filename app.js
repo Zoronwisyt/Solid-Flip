@@ -33,8 +33,8 @@
             layerCount: 5,
             splitDirection: 'global',
             customPivot: false,
-            pivotX: 0.5,
-            pivotY: 0.5,
+            pivotX: 0,
+            pivotY: 0,
             animOrder: 'topDown', 
             startAngle: 0, 
             endAngle: 90, 
@@ -50,8 +50,8 @@
       }
     ],
     flipEnabled: true,
-    flipPivotX: 0.5,
-    flipPivotY: 0.5,
+    flipPivotX: 0,
+    flipPivotY: 0,
     flipEasing: '0.25, 0.10, 0.25, 1.00',
     isPlaying: false,
     currentTimeSec: 0,
@@ -231,8 +231,8 @@
         const subSec = sec.subSections ? sec.subSections[sub] : sec;
         const subLayerCount = subSec.layerCount || 1;
         
-        const subPivotX = subSec.customPivot ? (subSec.pivotX !== undefined ? subSec.pivotX : 0.5) : state.flipPivotX;
-        const subPivotY = subSec.customPivot ? (subSec.pivotY !== undefined ? subSec.pivotY : 0.5) : state.flipPivotY;
+        const subPivotX = subSec.customPivot ? (subSec.pivotX !== undefined ? subSec.pivotX : 0) : state.flipPivotX;
+        const subPivotY = subSec.customPivot ? (subSec.pivotY !== undefined ? subSec.pivotY : 0) : state.flipPivotY;
         
         let subXStart = secXStart, subXEnd = secXEnd, subYStart = secYStart, subYEnd = secYEnd;
         
@@ -357,8 +357,10 @@
 
       // --- 3D FLIP EMULATION ---
       if (state.flipEnabled) {
-        const px = solidLeft + (layer.pivotX * solidW);
-        const py = solidTop + (layer.pivotY * solidH);
+        const normPivotX = (layer.pivotX / 200) + 0.5;
+        const normPivotY = (layer.pivotY / 200) + 0.5;
+        const px = solidLeft + (normPivotX * solidW);
+        const py = solidTop + (normPivotY * solidH);
         
         ctx.translate(px, py);
         
@@ -492,11 +494,11 @@
                 <label>Sub-section Pivot</label>
                 <div class="solid-size-row">
                   <div class="input-group" style="flex:1">
-                    <input type="number" class="sub-pivot-x" value="${subSec.pivotX !== undefined ? subSec.pivotX : 0.5}" step="0.1" title="Pivot X">
+                    <input type="number" class="sub-pivot-x" value="${subSec.pivotX !== undefined ? subSec.pivotX : 0}" step="1" title="Pivot X">
                     <div class="input-suffix">PX</div>
                   </div>
                   <div class="input-group" style="flex:1">
-                    <input type="number" class="sub-pivot-y" value="${subSec.pivotY !== undefined ? subSec.pivotY : 0.5}" step="0.1" title="Pivot Y">
+                    <input type="number" class="sub-pivot-y" value="${subSec.pivotY !== undefined ? subSec.pivotY : 0}" step="1" title="Pivot Y">
                     <div class="input-suffix">PY</div>
                   </div>
                 </div>
@@ -690,9 +692,9 @@
       block.querySelector('.sub-pivot-toggle').addEventListener('click', (e) => {
         const btn = e.target.closest('.toggle-btn');
         if (!btn) return;
-        subSec.customPivot = (btn.dataset.value === 'on');
-        if (subSec.pivotX === undefined) subSec.pivotX = 0.5;
-        if (subSec.pivotY === undefined) subSec.pivotY = 0.5;
+        subSec.customPivot = btn.dataset.value === 'on';
+        if (subSec.pivotX === undefined) subSec.pivotX = 0;
+        if (subSec.pivotY === undefined) subSec.pivotY = 0;
         renderSectionsUI();
         fullUpdate();
       });
