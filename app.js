@@ -39,6 +39,10 @@
             startAngle: 0, 
             endAngle: 90, 
             axis: 0, 
+            cubeXStart: 0,
+            cubeXEnd: 0,
+            cubeYStart: 0,
+            cubeYEnd: 0,
             customEasing: false, 
             easing: '0.25, 0.10, 0.25, 1.00',
             customTiming: false,
@@ -49,7 +53,7 @@
         ]
       }
     ],
-    flipEnabled: true,
+    animType: 'flip', // 'none', 'flip', 'cube'
     flipPivotX: 0,
     flipPivotY: 0,
     flipEasing: '0.25, 0.10, 0.25, 1.00',
@@ -82,7 +86,7 @@
   const beat1Input = $('#beat1');
   const beat2Input = $('#beat2');
   const beat3Input = $('#beat3');
-  const flipToggleGroup = $('#flipToggle');
+  const animTypeToggleGroup = $('#animTypeToggle');
   const flipPivotXInput = $('#flipPivotX');
   const flipPivotYInput = $('#flipPivotY');
   
@@ -290,6 +294,10 @@
             flipStartAngle: subSec.startAngle,
             flipEndAngle: subSec.endAngle,
             flipAxis: subSec.axis,
+            cubeXStart: subSec.cubeXStart || 0,
+            cubeXEnd: subSec.cubeXEnd || 0,
+            cubeYStart: subSec.cubeYStart || 0,
+            cubeYEnd: subSec.cubeYEnd || 0,
             pivotX: subPivotX,
             pivotY: subPivotY,
             sectionIdx: s,
@@ -338,25 +346,28 @@
     layers.forEach((layer, idx) => {
       ctx.save();
 
-      let flipAngle = layer.flipStartAngle;
-      if (state.flipEnabled && timeSec > layer.flipStartT) {
+      let eased = 0;
+      if ((state.animType === 'flip' || state.animType === 'cube') && timeSec > layer.flipStartT) {
         if (timeSec >= layer.flipEndT) {
-          flipAngle = layer.flipEndAngle;
+          eased = 1;
         } else {
           const progress = (timeSec - layer.flipStartT) / (layer.flipEndT - layer.flipStartT);
           const [x1, y1, x2, y2] = layer.flipEasing.split(',').map(Number);
-          const eased = bezierY(progress, x1, y1, x2, y2);
-          flipAngle = layer.flipStartAngle + (layer.flipEndAngle - layer.flipStartAngle) * eased;
+          eased = bezierY(progress, x1, y1, x2, y2);
         }
       }
+
+      let flipAngle = layer.flipStartAngle + (layer.flipEndAngle - layer.flipStartAngle) * eased;
+      let cubeRotX = layer.cubeXStart + (layer.cubeXEnd - layer.cubeXStart) * eased;
+      let cubeRotY = layer.cubeYStart + (layer.cubeYEnd - layer.cubeYStart) * eased;
 
       const solidW = layer.width * scaleF;
       const solidH = layer.height * scaleF;
       const solidLeft = (layer.locX * scaleF) - (solidW / 2);
       const solidTop = (layer.locY * scaleF) - (solidH / 2);
 
-      // --- 3D FLIP EMULATION ---
-      if (state.flipEnabled) {
+      // --- 3D FLIP/CUBE EMULATION ---
+      if (state.animType === 'flip' || state.animType === 'cube') {
         const normPivotX = (layer.pivotX / 200) + 0.5;
         const normPivotY = (layer.pivotY / 200) + 0.5;
         const px = solidLeft + (normPivotX * solidW);
@@ -364,15 +375,23 @@
         
         ctx.translate(px, py);
         
-        // In 2D, scaleX simulates a Y-axis flip (left/right). Axis 0 = left/right flip in Alight Motion.
-        // So we rotate by the axis angle to align, scale X by cos(flipAngle), then rotate back.
-        const axisRad = (layer.flipAxis * Math.PI) / 180;
-        ctx.rotate(-axisRad);
+        if (state.animType === 'flip') {
+          // In 2D, scaleX simulates a Y-axis flip (left/right). Axis 0 = left/right flip in Alight Motion.
+          // So we rotate by the axis angle to align, scale X by cos(flipAngle), then rotate back.
+          const axisRad = (layer.flipAxis * Math.PI) / 180;
+          ctx.rotate(-axisRad);
+          
+          const flipRad = (flipAngle * Math.PI) / 180;
+          ctx.scale(Math.cos(flipRad), 1);
+          
+          ctx.rotate(axisRad);
+        } else if (state.animType === 'cube') {
+          // X rotation (up/down) scales Y. Y rotation (left/right) scales X.
+          const radX = (cubeRotX * Math.PI) / 180;
+          const radY = (cubeRotY * Math.PI) / 180;
+          ctx.scale(Math.cos(radY), Math.cos(radX));
+        }
         
-        const flipRad = (flipAngle * Math.PI) / 180;
-        ctx.scale(Math.cos(flipRad), 1);
-        
-        ctx.rotate(axisRad);
         ctx.translate(-px, -py);
       }
 
@@ -531,7 +550,7 @@
               </select>
             </div>
 
-            <div class="control-group">
+            <div class="control-group anim-flip-only" style="display: ${state.animType === 'flip' ? 'block' : 'none'}">
               <label>Flip Angle Start/End</label>
               <div class="solid-size-row">
                 <div class="input-group">
@@ -545,11 +564,39 @@
               </div>
             </div>
 
-            <div class="control-group">
+            <div class="control-group anim-flip-only" style="display: ${state.animType === 'flip' ? 'block' : 'none'}">
               <label>Flip Axis</label>
               <div class="input-group">
                 <input type="number" class="sub-axis" value="${subSec.axis}" step="1">
                 <div class="input-suffix">AXIS</div>
+              </div>
+            </div>
+
+            <div class="control-group anim-cube-only" style="display: ${state.animType === 'cube' ? 'block' : 'none'}">
+              <label>Cube Rotation X (Up/Down)</label>
+              <div class="solid-size-row">
+                <div class="input-group">
+                  <input type="number" class="sub-cube-x-start" value="${subSec.cubeXStart || 0}" step="1">
+                  <div class="input-suffix">S</div>
+                </div>
+                <div class="input-group">
+                  <input type="number" class="sub-cube-x-end" value="${subSec.cubeXEnd || 0}" step="1">
+                  <div class="input-suffix">E</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="control-group anim-cube-only" style="display: ${state.animType === 'cube' ? 'block' : 'none'}">
+              <label>Cube Rotation Y (Left/Right)</label>
+              <div class="solid-size-row">
+                <div class="input-group">
+                  <input type="number" class="sub-cube-y-start" value="${subSec.cubeYStart || 0}" step="1">
+                  <div class="input-suffix">S</div>
+                </div>
+                <div class="input-group">
+                  <input type="number" class="sub-cube-y-end" value="${subSec.cubeYEnd || 0}" step="1">
+                  <div class="input-suffix">E</div>
+                </div>
               </div>
             </div>
 
@@ -734,6 +781,26 @@
         fullUpdate();
       });
       
+      block.querySelector('.sub-cube-x-start')?.addEventListener('input', (e) => {
+        subSec.cubeXStart = parseFloat(e.target.value) || 0;
+        fullUpdate();
+      });
+      
+      block.querySelector('.sub-cube-x-end')?.addEventListener('input', (e) => {
+        subSec.cubeXEnd = parseFloat(e.target.value) || 0;
+        fullUpdate();
+      });
+      
+      block.querySelector('.sub-cube-y-start')?.addEventListener('input', (e) => {
+        subSec.cubeYStart = parseFloat(e.target.value) || 0;
+        fullUpdate();
+      });
+      
+      block.querySelector('.sub-cube-y-end')?.addEventListener('input', (e) => {
+        subSec.cubeYEnd = parseFloat(e.target.value) || 0;
+        fullUpdate();
+      });
+      
       block.querySelector('.sub-easing-toggle').addEventListener('click', (e) => {
         const btn = e.target.closest('.toggle-btn');
         if (!btn) return;
@@ -873,32 +940,65 @@
         xml += `${t}${t}</effect>\n`;
       }
 
-      if (state.flipEnabled) {
+      if (state.animType === 'flip' || state.animType === 'cube') {
         // AM keyframes use a normalized time (0.0 to 1.0) relative to the layer's duration
         const projDurationSec = parseTimeToSeconds(state.projectDurationStr) || 1;
         const normStart = layer.flipStartT / projDurationSec;
         const normEnd = layer.flipEndT / projDurationSec;
 
-        // Flip Layer Effect
-        xml += `${t}${t}<effect id="com.alightcreative.effects.flip3" locallyApplied="true">\n`;
-        xml += `${t}${t}${t}<property name="axis" type="float" value="${layer.flipAxis.toFixed(6)}"/>\n`;
-        xml += `${t}${t}${t}<property name="pivot" type="vec2" value="${layer.pivotX.toFixed(6)},${layer.pivotY.toFixed(6)}"/>\n`;
-        xml += `${t}${t}${t}<property name="angle" type="float">\n`;
-        xml += `${t}${t}${t}${t}<kf t="${normStart.toFixed(6)}" v="${layer.flipStartAngle.toFixed(6)}" />\n`;
-        
         let easingStr = '';
         if (layer.flipEasing) {
           const bezierParts = layer.flipEasing.split(',').map(s => s.trim());
           easingStr = ` e="cubicBezier ${bezierParts.join(' ')}"`;
         }
-        
-        xml += `${t}${t}${t}${t}<kf t="${normEnd.toFixed(6)}" v="${layer.flipEndAngle.toFixed(6)}"${easingStr} />\n`;
-        xml += `${t}${t}${t}</property>\n`;
-        xml += `${t}${t}</effect>\n`;
+
+        if (state.animType === 'flip') {
+          // Flip Layer Effect
+          xml += `${t}${t}<effect id="com.alightcreative.effects.flip3" locallyApplied="true">\n`;
+          xml += `${t}${t}${t}<property name="axis" type="float" value="${layer.flipAxis.toFixed(6)}"/>\n`;
+          xml += `${t}${t}${t}<property name="pivot" type="vec2" value="${layer.pivotX.toFixed(6)},${layer.pivotY.toFixed(6)}"/>\n`;
+          xml += `${t}${t}${t}<property name="angle" type="float">\n`;
+          xml += `${t}${t}${t}${t}<kf t="${normStart.toFixed(6)}" v="${layer.flipStartAngle.toFixed(6)}" />\n`;
+          xml += `${t}${t}${t}${t}<kf t="${normEnd.toFixed(6)}" v="${layer.flipEndAngle.toFixed(6)}"${easingStr} />\n`;
+          xml += `${t}${t}${t}</property>\n`;
+          xml += `${t}${t}</effect>\n`;
+        } else if (state.animType === 'cube') {
+          // Cube Effect
+          const visualToProjectRatio = 650 / 1080;
+          const scaleMultiplier = layer.width / (state.projectWidth * visualToProjectRatio);
+          const cubeScale = 1.32 * scaleMultiplier;
+          
+          const cubeWidth = state.projectWidth / 1000;
+          const cubeHeight = state.projectHeight / 1000;
+          const cubeDepth = state.projectWidth / 1000;
+          
+          xml += `${t}${t}<effect id="com.alightcreative.effects.cube2" locallyApplied="true">\n`;
+          xml += `${t}${t}${t}<property name="depth" type="float" value="${cubeDepth.toFixed(6)}"/>\n`;
+          xml += `${t}${t}${t}<property name="height" type="float" value="${cubeHeight.toFixed(6)}"/>\n`;
+          
+          // Rotation (X, Y, Z)
+          xml += `${t}${t}${t}<property name="rotate" type="vec3">\n`;
+          
+          xml += `${t}${t}${t}${t}<kf t="${normStart.toFixed(6)}" v="${layer.cubeXStart.toFixed(6)},${layer.cubeYStart.toFixed(6)},0.000000" />\n`;
+          
+          xml += `${t}${t}${t}${t}<kf t="${normEnd.toFixed(6)}" v="${layer.cubeXEnd.toFixed(6)},${layer.cubeYEnd.toFixed(6)},0.000000"${easingStr} />\n`;
+          
+          xml += `${t}${t}${t}</property>\n`;
+          
+          xml += `${t}${t}${t}<property name="position" type="vec3" value="0.000000,0.000000,0.000000"/>\n`;
+          xml += `${t}${t}${t}<property name="scale" type="float" value="${cubeScale.toFixed(6)}"/>\n`;
+          xml += `${t}${t}${t}<property name="shadingType" type="int" value="0"/>\n`;
+          xml += `${t}${t}${t}<property name="width" type="float" value="${cubeWidth.toFixed(6)}"/>\n`;
+          xml += `${t}${t}</effect>\n`;
+        }
       }
 
       // AM interprets 'size' on vector shapes as half-extents (radius from center)
-      xml += `${t}${t}<property name="size" type="vec2" value="${(layer.width / 2).toFixed(6)},${(layer.height / 2).toFixed(6)}"/>\n`;
+      if (state.animType === 'cube') {
+        xml += `${t}${t}<property name="size" type="vec2" value="${(state.projectWidth / 2).toFixed(6)},${(state.projectHeight / 2).toFixed(6)}"/>\n`;
+      } else {
+        xml += `${t}${t}<property name="size" type="vec2" value="${(layer.width / 2).toFixed(6)},${(layer.height / 2).toFixed(6)}"/>\n`;
+      }
 
       xml += `${t}</shape>\n`;
     }
@@ -1087,12 +1187,13 @@
     state.beat3Str = beat3Input.value;
     fullUpdate();
   });
-  flipToggleGroup.addEventListener('click', (e) => {
+  animTypeToggleGroup.addEventListener('click', (e) => {
     const btn = e.target.closest('.toggle-btn');
     if (!btn) return;
-    flipToggleGroup.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    animTypeToggleGroup.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    state.flipEnabled = btn.dataset.value === 'on';
+    state.animType = btn.dataset.value;
+    renderSectionsUI();
     fullUpdate();
   });
   flipPivotXInput.addEventListener('input', () => {
