@@ -169,6 +169,8 @@
   const toggleXmlBtn = $('#toggleXmlBtn');
   const copyXmlBtn = $('#copyXmlBtn');
   const downloadXmlBtn = $('#downloadXmlBtn');
+  const copySettingsBtn = $('#copySettingsBtn');
+  const importSettingsBtn = $('#importSettingsBtn');
   const xmlCodeContainer = $('#xmlCodeContainer');
 
   // Toast
@@ -1527,15 +1529,151 @@
       await navigator.clipboard.writeText(generateAlightMotionXML());
       showToast('Copied XML to clipboard!');
     } catch (err) {
-      const textarea = document.createElement('textarea');
-      textarea.value = generateAlightMotionXML();
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      showToast('Copied XML to clipboard!');
+      // Fallback for browsers that don't support navigator.clipboard
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = generateAlightMotionXML();
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('Copied XML to clipboard!');
+      } catch (fallbackErr) {
+        console.error("Fallback copy failed:", fallbackErr);
+        showToast('Failed to copy XML.', true);
+      }
     }
   });
+
+  // ---- Settings Import/Export ----
+
+  function deepMerge(target, source) {
+    const isObject = (obj) => obj && typeof obj === 'object' && !Array.isArray(obj);
+
+    // Create a new object to avoid modifying the original target state directly
+    let output = { ...target };
+
+    for (const key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        const sourceValue = source[key];
+        const targetValue = target[key];
+
+        // Recurse for nested objects
+        if (isObject(targetValue) && isObject(sourceValue)) {
+          output[key] = deepMerge(targetValue, sourceValue);
+        }
+        // Handle arrays: overwrite target array with source array
+        // This is a simpler approach than deep-merging array elements, which can be complex.
+        // It assumes the imported array is complete and valid.
+        else if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
+          output[key] = sourceValue;
+        }
+        // Handle primitive values
+        else if (targetValue !== undefined && typeof targetValue === typeof sourceValue) {
+          output[key] = sourceValue;
+        }
+        // Otherwise, ignore the key from the source to prevent pollution
+      }
+    }
+    return output;
+  }
+
+
+  copySettingsBtn.addEventListener('click', () => {
+    try {
+      // Create a clean copy of the state for serialization
+      const stateToSave = { ...state };
+      // These are not useful to save as they are runtime-specific
+      delete stateToSave.isPlaying;
+      delete stateToSave.currentTimeSec;
+
+      const settingsString = JSON.stringify(stateToSave);
+      const encodedSettings = btoa(settingsString);
+      navigator.clipboard.writeText(encodedSettings);
+      showToast('Settings copied to clipboard!');
+    } catch (error) {
+      console.error("Error copying settings:", error);
+      showToast('Error copying settings.', true);
+    }
+  });
+
+  importSettingsBtn.addEventListener('click', () => {
+    const encodedSettings = prompt("Paste your settings string below:");
+    if (!encodedSettings || encodedSettings.trim() === '') return;
+
+    try {
+      const settingsString = atob(encodedSettings);
+      const importedState = JSON.parse(settingsString);
+
+      // Safely merge the imported state into the current state
+      const newState = deepMerge(state, importedState);
+      
+      // Now, we need to re-assign the new properties back to the original state object
+      // This preserves the original state object reference, which is important for the app.
+      Object.keys(newState).forEach(key => {
+        state[key] = newState[key];
+      });
+
+      // Refresh UI with new values from the merged state
+      updateUIFromState();
+      
+      showToast('Settings imported successfully!');
+    } catch (error) {
+      console.error("Error importing settings:", error);
+      showToast('Invalid or corrupted settings string.', true);
+    }
+  });
+
+  function updateUIFromState() {
+    // Update all input fields and UI elements to reflect the current state
+    projectScaleSelect.value = state.projectWidth / state.baseWidth;
+    solidWidthInput.value = state.solidWidth;
+    solidHeightInput.value = state.solidHeight;
+    aspectLinkBtn.classList.toggle('active', state.aspectLocked);
+    solidColorInput.value = state.solidColor;
+    colorValueSpan.textContent = state.solidColor;
+    
+    document.querySelector(`#splitDirection .toggle-btn[data-value='${state.splitDirection}']`).click();
+    document.querySelector(`#wipeMethod .toggle-btn[data-value='${state.wipeMethod}']`).click();
+    
+    projectDurationInput.value = state.projectDurationStr;
+    projectFpsInput.value = state.fps;
+    beat1Input.value = state.beat1Str;
+    beat2Input.value = state.beat2Str;
+    beat3Input.value = state.beat3Str;
+
+    document.querySelector(`#animTypeToggle .toggle-btn[data-value='${state.animType}']`).click();
+    
+    flipPivotXInput.value = state.flipPivotX;
+    flipPivotYInput.value = state.flipPivotY;
+
+    // Box controls
+    boxOrientAllStartInput.value = state.box.orientAllStartStr;
+    boxOrientFirstEndInput.value = state.box.orientFirstEndStr;
+    boxOrientLastEndInput.value = state.box.orientLastEndStr;
+    boxOrientStartXInput.value = state.box.orientStartX;
+    boxOrientStartYInput.value = state.box.orientStartY;
+    boxOrientStartZInput.value = state.box.orientStartZ;
+    boxOrientEndXInput.value = state.box.orientEndX;
+    boxOrientEndYInput.value = state.box.orientEndY;
+    boxOrientEndZInput.value = state.box.orientEndZ;
+    boxRotateAllStartInput.value = state.box.rotateAllStartStr;
+    boxRotateFirstEndInput.value = state.box.rotateFirstEndStr;
+    boxRotateLastEndInput.value = state.box.rotateLastEndStr;
+    boxRotateStartXInput.value = state.box.rotateStartX;
+    boxRotateStartYInput.value = state.box.rotateStartY;
+    boxRotateStartZInput.value = state.box.rotateStartZ;
+    boxRotateEndXInput.value = state.box.rotateEndX;
+    boxRotateEndYInput.value = state.box.rotateEndY;
+    boxRotateEndZInput.value = state.box.rotateEndZ;
+
+    sectionCountInput.value = state.sectionCount;
+
+    // This will re-render the sections and sub-sections, which is crucial
+    renderSectionsUI(); 
+    // Finally, do a full update to recalculate everything and redraw the canvas
+    fullUpdate();
+  }
 
   // Download XML
   downloadXmlBtn.addEventListener('click', () => {
