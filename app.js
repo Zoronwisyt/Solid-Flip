@@ -15,6 +15,7 @@
     solidWidth: 1080,
     solidHeight: 1350,
     splitDirection: 'horizontal',
+    wipeMethod: 'wipe',
     solidColor: '#64E4DC',
     wipeAngle: 0,
     wipeSoftness: 0,
@@ -53,9 +54,33 @@
         ]
       }
     ],
-    animType: 'flip', // 'none', 'flip', 'cube'
+    animType: 'flip', // 'none', 'flip', 'cube', 'box'
     flipPivotX: 0,
     flipPivotY: 0,
+    box: {
+      orientAllStartStr: '00:00:00',
+      orientFirstEndStr: '00:02:00',
+      orientLastEndStr: '00:04:00',
+      orientStartX: 0,
+      orientStartY: 0,
+      orientStartZ: 0,
+      orientEndX: 0,
+      orientEndY: 180,
+      orientEndZ: 0,
+      rotateAllStartStr: '00:01:00',
+      rotateFirstEndStr: '00:03:00',
+      rotateLastEndStr: '00:05:00',
+      rotateStartX: 0,
+      rotateStartY: 0,
+      rotateStartZ: 0,
+      rotateEndX: 0,
+      rotateEndY: 180,
+      rotateEndZ: 0,
+      depth: 0.01,
+      scale: 3.51,
+      orientEasing: '0.25, 0.10, 0.25, 1.00',
+      rotateEasing: '0.25, 0.10, 0.25, 1.00',
+    },
     flipEasing: '0.25, 0.10, 0.25, 1.00',
     isPlaying: false,
     currentTimeSec: 0,
@@ -68,6 +93,7 @@
 
   // Controls
   const splitDirectionGroup = $('#splitDirection');
+  const wipeMethodGroup = $('#wipeMethod');
   const projectScaleSelect = $('#projectScale');
   const solidWidthInput = $('#solidWidth');
   const solidHeightInput = $('#solidHeight');
@@ -83,12 +109,36 @@
   // Animation & Timing
   const projectDurationInput = $('#projectDuration');
   const projectFpsInput = $('#projectFps');
+  const globalTimingControls = $('#globalTimingControls');
   const beat1Input = $('#beat1');
   const beat2Input = $('#beat2');
   const beat3Input = $('#beat3');
   const animTypeToggleGroup = $('#animTypeToggle');
   const flipPivotXInput = $('#flipPivotX');
   const flipPivotYInput = $('#flipPivotY');
+
+  // Box Controls
+  const boxEffectControls = $('#boxEffectControls');
+  const boxOrientAllStartInput = $('#boxOrientAllStart');
+  const boxOrientFirstEndInput = $('#boxOrientFirstEnd');
+  const boxOrientLastEndInput = $('#boxOrientLastEnd');
+  const boxOrientStartXInput = $('#boxOrientStartX');
+  const boxOrientStartYInput = $('#boxOrientStartY');
+  const boxOrientStartZInput = $('#boxOrientStartZ');
+  const boxOrientEndXInput = $('#boxOrientEndX');
+  const boxOrientEndYInput = $('#boxOrientEndY');
+  const boxOrientEndZInput = $('#boxOrientEndZ');
+  const boxRotateAllStartInput = $('#boxRotateAllStart');
+  const boxRotateFirstEndInput = $('#boxRotateFirstEnd');
+  const boxRotateLastEndInput = $('#boxRotateLastEnd');
+  const boxRotateStartXInput = $('#boxRotateStartX');
+  const boxRotateStartYInput = $('#boxRotateStartY');
+  const boxRotateStartZInput = $('#boxRotateStartZ');
+  const boxRotateEndXInput = $('#boxRotateEndX');
+  const boxRotateEndYInput = $('#boxRotateEndY');
+  const boxRotateEndZInput = $('#boxRotateEndZ');
+  const boxOrientEasingBtn = $('#boxOrientEasingBtn');
+  const boxRotateEasingBtn = $('#boxRotateEasingBtn');
   
   const sectionCountInput = $('#sectionCount');
   const sectionMinusBtn = $('#sectionMinus');
@@ -98,6 +148,8 @@
   const openGraphBtn = $('#openGraphBtn');
   const closeGraphBtn = $('#closeGraphBtn');
   const graphModal = $('#graphModal');
+  const graphIframe = $('#graphIframe');
+  const graphIframe2 = $('#graphIframe2');
 
   // Display
   const wipeXDisplay = $('#wipeXDisplay');
@@ -188,6 +240,27 @@
     setTimeout(() => toast.classList.remove('show'), 2200);
   }
 
+  function eulerToQuaternion(x, y, z) {
+    // Convert degrees to radians
+    const radX = x * Math.PI / 180;
+    const radY = y * Math.PI / 180;
+    const radZ = z * Math.PI / 180;
+
+    const cy = Math.cos(radZ * 0.5);
+    const sy = Math.sin(radZ * 0.5);
+    const cp = Math.cos(radY * 0.5);
+    const sp = Math.sin(radY * 0.5);
+    const cr = Math.cos(radX * 0.5);
+    const sr = Math.sin(radX * 0.5);
+
+    const w = cr * cp * cy + sr * sp * sy;
+    const x_q = sr * cp * cy - cr * sp * sy;
+    const y_q = cr * sp * cy + sr * cp * sy;
+    const z_q = cr * cp * sy - sr * sp * cy;
+
+    return { w, x: x_q, y: y_q, z: z_q };
+  }
+
   function parseTimeToSeconds(timeStr) {
     // Format: MM:SS:FF where FF = frame number (0 to fps-1)
     const parts = timeStr.split(':');
@@ -251,10 +324,10 @@
         }
 
         const b1 = subSec.customTiming ? parseTimeToSeconds(subSec.beat1Str) : globalB1;
-        const b2 = subSec.customTiming ? parseTimeToSeconds(subSec.beat2Str) : globalB2;
-        const b3 = subSec.customTiming ? parseTimeToSeconds(subSec.beat3Str) : globalB3;
+          const b2 = subSec.customTiming ? parseTimeToSeconds(subSec.beat2Str) : globalB2;
+          const b3 = subSec.customTiming ? parseTimeToSeconds(subSec.beat3Str) : globalB3;
 
-        const subDir = (subSec.splitDirection && subSec.splitDirection !== 'global') ? subSec.splitDirection : state.splitDirection;
+          const subDir = (subSec.splitDirection && subSec.splitDirection !== 'global') ? subSec.splitDirection : state.splitDirection;
 
         for (let l = 0; l < subLayerCount; l++) {
           let layerXStart = subXStart, layerXEnd = subXEnd, layerYStart = subYStart, layerYEnd = subYEnd;
@@ -274,23 +347,29 @@
             localOrderIdx = subLayerCount - 1 - l;
           }
 
-          let flipEnd = b2;
-          if (subLayerCount > 1) {
-            flipEnd = b2 + (b3 - b2) * (localOrderIdx / (subLayerCount - 1));
-          }
+          const staggerRatio = (subLayerCount > 1) ? (localOrderIdx / (subLayerCount - 1)) : 0;
+          const flipEnd = b2 + (b3 - b2) * staggerRatio;
 
-          layers.push({
+          const orientAllStart = parseTimeToSeconds(state.box.orientAllStartStr);
+          const orientFirstEnd = parseTimeToSeconds(state.box.orientFirstEndStr);
+          const orientLastEnd = parseTimeToSeconds(state.box.orientLastEndStr);
+          const orientStart = orientAllStart;
+          const orientEnd = orientFirstEnd + (orientLastEnd - orientFirstEnd) * staggerRatio;
+
+          const rotateAllStart = parseTimeToSeconds(state.box.rotateAllStartStr);
+          const rotateFirstEnd = parseTimeToSeconds(state.box.rotateFirstEndStr);
+          const rotateLastEnd = parseTimeToSeconds(state.box.rotateLastEndStr);
+          const rotateStart = rotateAllStart;
+          const rotateEnd = rotateFirstEnd + (rotateLastEnd - rotateFirstEnd) * staggerRatio;
+
+          const layerProps = {
             index: globalLayerIndex + 1,
-            locX: state.projectWidth / 2,
-            locY: state.projectHeight / 2,
-            width: state.solidWidth,
-            height: state.solidHeight,
-            wipeXStart: layerXStart,
-            wipeXEnd: layerXEnd,
-            wipeYStart: layerYStart,
-            wipeYEnd: layerYEnd,
             flipStartT: b1,
             flipEndT: flipEnd,
+            orientStartT: orientStart,
+            orientEndT: orientEnd,
+            rotateStartT: rotateStart,
+            rotateEndT: rotateEnd,
             flipStartAngle: subSec.startAngle,
             flipEndAngle: subSec.endAngle,
             flipAxis: subSec.axis,
@@ -303,7 +382,40 @@
             sectionIdx: s,
             subSectionIdx: sub,
             flipEasing: subSec.customEasing ? subSec.easing : state.flipEasing
-          });
+          };
+
+          if (state.wipeMethod === 'mask') {
+            const layerWidth = (layerXEnd - layerXStart) * state.solidWidth;
+            const layerHeight = (layerYEnd - layerYStart) * state.solidHeight;
+            const solidOriginX = (state.projectWidth - state.solidWidth) / 2;
+            const solidOriginY = (state.projectHeight - state.solidHeight) / 2;
+            const layerLocX = solidOriginX + (layerXStart * state.solidWidth) + (layerWidth / 2);
+            const layerLocY = solidOriginY + (layerYStart * state.solidHeight) + (layerHeight / 2);
+
+            Object.assign(layerProps, {
+              locX: layerLocX,
+              locY: layerLocY,
+              width: layerWidth,
+              height: layerHeight,
+              wipeXStart: 0,
+              wipeXEnd: 1,
+              wipeYStart: 0,
+              wipeYEnd: 1,
+            });
+          } else { // 'wipe' method
+            Object.assign(layerProps, {
+              locX: state.projectWidth / 2,
+              locY: state.projectHeight / 2,
+              width: state.solidWidth,
+              height: state.solidHeight,
+              wipeXStart: layerXStart,
+              wipeXEnd: layerXEnd,
+              wipeYStart: layerYStart,
+              wipeYEnd: layerYEnd,
+            });
+          }
+
+          layers.push(layerProps);
           
           globalLayerIndex++;
         }
@@ -342,7 +454,7 @@
     // Clear
     ctx.clearRect(0, 0, drawW, drawH);
 
-    // Draw each layer as a sliced rect based on wipe start/end
+    // Draw each layer
     layers.forEach((layer, idx) => {
       ctx.save();
 
@@ -361,60 +473,113 @@
       let cubeRotX = layer.cubeXStart + (layer.cubeXEnd - layer.cubeXStart) * eased;
       let cubeRotY = layer.cubeYStart + (layer.cubeYEnd - layer.cubeYStart) * eased;
 
-      const solidW = layer.width * scaleF;
-      const solidH = layer.height * scaleF;
-      const solidLeft = (layer.locX * scaleF) - (solidW / 2);
-      const solidTop = (layer.locY * scaleF) - (solidH / 2);
+      const layerW = layer.width * scaleF;
+      const layerH = layer.height * scaleF;
+      const layerLeft = (layer.locX * scaleF) - (layerW / 2);
+      const layerTop = (layer.locY * scaleF) - (layerH / 2);
 
       // --- 3D FLIP/CUBE EMULATION ---
-      if (state.animType === 'flip' || state.animType === 'cube') {
+      if (state.animType === 'flip' || state.animType === 'cube' || state.animType === 'box') {
         const normPivotX = (layer.pivotX / 200) + 0.5;
         const normPivotY = (layer.pivotY / 200) + 0.5;
-        const px = solidLeft + (normPivotX * solidW);
-        const py = solidTop + (normPivotY * solidH);
+        const px = layerLeft + (normPivotX * layerW);
+        const py = layerTop + (normPivotY * layerH);
         
         ctx.translate(px, py);
         
         if (state.animType === 'flip') {
-          // In 2D, scaleX simulates a Y-axis flip (left/right). Axis 0 = left/right flip in Alight Motion.
-          // So we rotate by the axis angle to align, scale X by cos(flipAngle), then rotate back.
           const axisRad = (layer.flipAxis * Math.PI) / 180;
           ctx.rotate(-axisRad);
-          
           const flipRad = (flipAngle * Math.PI) / 180;
           ctx.scale(Math.cos(flipRad), 1);
-          
           ctx.rotate(axisRad);
         } else if (state.animType === 'cube') {
-          // X rotation (up/down) scales Y. Y rotation (left/right) scales X.
           const radX = (cubeRotX * Math.PI) / 180;
           const radY = (cubeRotY * Math.PI) / 180;
           ctx.scale(Math.cos(radY), Math.cos(radX));
+        } else if (state.animType === 'box') {
+            // Orientation progress
+            let orientEased = 0;
+            const orientStartT = layer.orientStartT;
+            const orientEndT = layer.orientEndT;
+            if (timeSec > orientStartT && orientEndT > orientStartT) {
+                if (timeSec >= orientEndT) {
+                    orientEased = 1;
+                } else {
+                    const progress = (timeSec - orientStartT) / (orientEndT - orientStartT);
+                    const [x1, y1, x2, y2] = state.box.orientEasing.split(',').map(Number);
+                    orientEased = bezierY(progress, x1, y1, x2, y2);
+                }
+            }
+
+            // Rotation progress
+            let rotateEased = 0;
+            const rotateStartT = layer.rotateStartT;
+            const rotateEndT = layer.rotateEndT;
+            if (timeSec > rotateStartT && rotateEndT > rotateStartT) {
+                if (timeSec >= rotateEndT) {
+                    rotateEased = 1;
+                } else {
+                    const progress = (timeSec - rotateStartT) / (rotateEndT - rotateStartT);
+                    const [x1, y1, x2, y2] = state.box.rotateEasing.split(',').map(Number);
+                    rotateEased = bezierY(progress, x1, y1, x2, y2);
+                }
+            }
+
+            // Interpolate angles
+            const orientRotX = state.box.orientStartX + (state.box.orientEndX - state.box.orientStartX) * orientEased;
+            const orientRotY = state.box.orientStartY + (state.box.orientEndY - state.box.orientStartY) * orientEased;
+            
+            const rotateRotX = state.box.rotateStartX + (state.box.rotateEndX - state.box.rotateStartX) * rotateEased;
+            const rotateRotY = state.box.rotateStartY + (state.box.rotateEndY - state.box.rotateStartY) * rotateEased;
+
+            // Combine rotations for 2D preview (simplification)
+            const combinedRotX = orientRotX + rotateRotX;
+            const combinedRotY = orientRotY + rotateRotY;
+
+            // Apply transformation (similar to cube)
+            const radX = (combinedRotX * Math.PI) / 180;
+            const radY = (combinedRotY * Math.PI) / 180;
+            ctx.scale(Math.cos(radY), Math.cos(radX));
         }
         
         ctx.translate(-px, -py);
       }
 
-      const lx = solidLeft + layer.wipeXStart * solidW;
-      const lw = (layer.wipeXEnd - layer.wipeXStart) * solidW;
-      const ly = solidTop + layer.wipeYStart * solidH;
-      const lh = (layer.wipeYEnd - layer.wipeYStart) * solidH;
+      if (state.wipeMethod === 'wipe') {
+        const solidW = state.solidWidth * scaleF;
+        const solidH = state.solidHeight * scaleF;
+        const solidLeft = (state.projectWidth / 2 * scaleF) - (solidW / 2);
+        const solidTop = (state.projectHeight / 2 * scaleF) - (solidH / 2);
 
-      // Clip to mask
-      ctx.beginPath();
-      ctx.rect(lx, ly, lw, lh);
-      ctx.clip();
+        const lx = solidLeft + layer.wipeXStart * solidW;
+        const lw = (layer.wipeXEnd - layer.wipeXStart) * solidW;
+        const ly = solidTop + layer.wipeYStart * solidH;
+        const lh = (layer.wipeYEnd - layer.wipeYStart) * solidH;
 
-      // Draw full layer fill
-      ctx.fillStyle = getLayerColor(idx, layers.length, layer.sectionIdx, state.sectionCount);
-      ctx.fillRect(solidLeft, solidTop, solidW, solidH);
+        ctx.beginPath();
+        ctx.rect(lx, ly, lw, lh);
+        ctx.clip();
 
-      // Layer label
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.font = `${Math.max(9, 12 * scaleF * 3)}px Inter, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`C${layer.index}`, lx + lw / 2, ly + lh / 2);
+        ctx.fillStyle = getLayerColor(idx, layers.length, layer.sectionIdx, state.sectionCount);
+        ctx.fillRect(solidLeft, solidTop, solidW, solidH);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.font = `${Math.max(9, 12 * scaleF * 3)}px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`C${layer.index}`, lx + lw / 2, ly + lh / 2);
+
+      } else { // 'mask' method
+        ctx.fillStyle = getLayerColor(idx, layers.length, layer.sectionIdx, state.sectionCount);
+        ctx.fillRect(layerLeft, layerTop, layerW, layerH);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.font = `${Math.max(9, 12 * scaleF * 3)}px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`C${layer.index}`, layerLeft + layerW / 2, layerTop + layerH / 2);
+      }
 
       ctx.restore();
     });
@@ -424,23 +589,17 @@
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);
 
-    layers.forEach((layer, idx) => {
-      const solidW = layer.width * scaleF;
-      const solidH = layer.height * scaleF;
-      const solidLeft = (layer.locX * scaleF) - (solidW / 2);
-      const solidTop = (layer.locY * scaleF) - (solidH / 2);
-
-      const lx = solidLeft + layer.wipeXStart * solidW;
-      const lw = (layer.wipeXEnd - layer.wipeXStart) * solidW;
-      const ly = solidTop + layer.wipeYStart * solidH;
-      const lh = (layer.wipeYEnd - layer.wipeYStart) * solidH;
-
-      ctx.strokeRect(lx, ly, lw, lh);
+    layers.forEach((layer) => {
+      const layerW = layer.width * scaleF;
+      const layerH = layer.height * scaleF;
+      const layerLeft = (layer.locX * scaleF) - (layerW / 2);
+      const layerTop = (layer.locY * scaleF) - (layerH / 2);
+      ctx.strokeRect(layerLeft, layerTop, layerW, layerH);
     });
 
     ctx.setLineDash([]);
 
-    // Draw central crosshair (Location of all layers)
+    // Draw central crosshair
     const cx = (state.projectWidth / 2) * scaleF;
     const cy = (state.projectHeight / 2) * scaleF;
     const crossSize = 12;
@@ -916,31 +1075,48 @@
       const layer = layers[i];
       const layerLabel = i === 0 ? "Rectangle 1" : `Rectangle 1 Copy${i > 1 ? ' ' + i : ''}`;
 
+      let finalLocX = layer.locX;
+      let finalLocY = layer.locY;
+      let finalScaleX = 1.0;
+      let finalScaleY = 1.0;
+      let finalSizeX = layer.width / 2;
+      let finalSizeY = layer.height / 2;
+
+      // For mask method, we use absolute positioning and calculate scale from a base size.
+      if (state.wipeMethod === 'mask') {
+        finalSizeX = 100.0;
+        finalSizeY = 100.0;
+        finalScaleX = layer.width / 200.0;
+        finalScaleY = layer.height / 200.0;
+      }
+
       xml += `${t}<shape id="${layer.index}" label="${layerLabel}" startTime="0" endTime="${totalTimeMs}" fillType="color" s=".rect">\n`;
 
       xml += `${t}${t}<transform>\n`;
-      xml += `${t}${t}${t}<location value="${layer.locX.toFixed(6)},${layer.locY.toFixed(6)},0.000000"/>\n`;
-      xml += `${t}${t}${t}<scale value="1.000000,1.000000"/>\n`;
+      xml += `${t}${t}${t}<location value="${finalLocX.toFixed(6)},${finalLocY.toFixed(6)},0.000000"/>\n`;
+      xml += `${t}${t}${t}<scale value="${finalScaleX.toFixed(6)},${finalScaleY.toFixed(6)}"/>\n`;
       xml += `${t}${t}</transform>\n`;
 
       xml += `${t}${t}<fillColor value="${amColor}"/>\n`;
 
-      if (layer.wipeYStart > 0.0 || layer.wipeYEnd < 1.0) {
-        xml += `${t}${t}<effect id="com.alightcreative.effects.wipe2" locallyApplied="true">\n`;
-        if (layer.wipeYEnd < 1.0) xml += `${t}${t}${t}<property name="end" type="float" value="${layer.wipeYEnd.toFixed(6)}"/>\n`;
-        if (layer.wipeYStart > 0.0) xml += `${t}${t}${t}<property name="start" type="float" value="${layer.wipeYStart.toFixed(6)}"/>\n`;
-        xml += `${t}${t}${t}<property name="angle" type="float" value="90.000000"/>\n`;
-        xml += `${t}${t}</effect>\n`;
-      }
-      if (layer.wipeXStart > 0.0 || layer.wipeXEnd < 1.0) {
-        xml += `${t}${t}<effect id="com.alightcreative.effects.wipe2" locallyApplied="true">\n`;
-        if (layer.wipeXEnd < 1.0) xml += `${t}${t}${t}<property name="end" type="float" value="${layer.wipeXEnd.toFixed(6)}"/>\n`;
-        if (layer.wipeXStart > 0.0) xml += `${t}${t}${t}<property name="start" type="float" value="${layer.wipeXStart.toFixed(6)}"/>\n`;
-        xml += `${t}${t}${t}<property name="angle" type="float" value="0.000000"/>\n`;
-        xml += `${t}${t}</effect>\n`;
+      if (state.wipeMethod === 'wipe') {
+        if (layer.wipeYStart > 0.0 || layer.wipeYEnd < 1.0) {
+          xml += `${t}${t}<effect id="com.alightcreative.effects.wipe2" locallyApplied="true">\n`;
+          if (layer.wipeYEnd < 1.0) xml += `${t}${t}${t}<property name="end" type="float" value="${layer.wipeYEnd.toFixed(6)}"/>\n`;
+          if (layer.wipeYStart > 0.0) xml += `${t}${t}${t}<property name="start" type="float" value="${layer.wipeYStart.toFixed(6)}"/>\n`;
+          xml += `${t}${t}${t}<property name="angle" type="float" value="90.000000"/>\n`;
+          xml += `${t}${t}</effect>\n`;
+        }
+        if (layer.wipeXStart > 0.0 || layer.wipeXEnd < 1.0) {
+          xml += `${t}${t}<effect id="com.alightcreative.effects.wipe2" locallyApplied="true">\n`;
+          if (layer.wipeXEnd < 1.0) xml += `${t}${t}${t}<property name="end" type="float" value="${layer.wipeXEnd.toFixed(6)}"/>\n`;
+          if (layer.wipeXStart > 0.0) xml += `${t}${t}${t}<property name="start" type="float" value="${layer.wipeXStart.toFixed(6)}"/>\n`;
+          xml += `${t}${t}${t}<property name="angle" type="float" value="0.000000"/>\n`;
+          xml += `${t}${t}</effect>\n`;
+        }
       }
 
-      if (state.animType === 'flip' || state.animType === 'cube') {
+      if (state.animType === 'flip' || state.animType === 'cube' || state.animType === 'box') {
         // AM keyframes use a normalized time (0.0 to 1.0) relative to the layer's duration
         const projDurationSec = parseTimeToSeconds(state.projectDurationStr) || 1;
         const normStart = layer.flipStartT / projDurationSec;
@@ -990,11 +1166,46 @@
           xml += `${t}${t}${t}<property name="shadingType" type="int" value="0"/>\n`;
           xml += `${t}${t}${t}<property name="width" type="float" value="${cubeWidth.toFixed(6)}"/>\n`;
           xml += `${t}${t}</effect>\n`;
+        } else if (state.animType === 'box') {
+          // Box Effect
+          xml += `${t}${t}<effect id="com.alightcreative.effects.box" locallyApplied="true">\n`;
+          xml += `${t}${t}${t}<property name="depth" type="float" value="${state.box.depth.toFixed(6)}"/>\n`;
+          xml += `${t}${t}${t}<property name="scale" type="float" value="${state.box.scale.toFixed(6)}"/>\n`;
+
+          // --- Orientation ---
+          const normOrientStart = layer.orientStartT / projDurationSec;
+          const normOrientEnd = layer.orientEndT / projDurationSec;
+          const startQuat = eulerToQuaternion(state.box.orientStartX, state.box.orientStartY, state.box.orientStartZ);
+          const endQuat = eulerToQuaternion(state.box.orientEndX, state.box.orientEndY, state.box.orientEndZ);
+          const orientEasingStr = ` e="cubicBezier ${state.box.orientEasing.replace(/, /g, ' ')}"`;
+          const rotateEasingStr = ` e="cubicBezier ${state.box.rotateEasing.replace(/, /g, ' ')}"`;
+
+          xml += `${t}${t}${t}<property name="orient" type="quat">\n`;
+          xml += `${t}${t}${t}${t}<kf t="${normOrientStart.toFixed(6)}" v="${startQuat.w.toFixed(6)},${startQuat.x.toFixed(6)},${startQuat.y.toFixed(6)},${startQuat.z.toFixed(6)}" />\n`;
+          xml += `${t}${t}${t}${t}<kf t="${normOrientEnd.toFixed(6)}" v="${endQuat.w.toFixed(6)},${endQuat.x.toFixed(6)},${endQuat.y.toFixed(6)},${endQuat.z.toFixed(6)}" ${orientEasingStr} />\n`;
+          xml += `${t}${t}${t}</property>\n`;
+
+          // --- Rotation ---
+          const normRotateStart = layer.rotateStartT / projDurationSec;
+          const normRotateEnd = layer.rotateEndT / projDurationSec;
+
+          xml += `${t}${t}${t}<property name="rotate" type="vec3">\n`;
+          xml += `${t}${t}${t}${t}<kf t="${normRotateStart.toFixed(6)}" v="${state.box.rotateStartX.toFixed(6)},${state.box.rotateStartY.toFixed(6)},${state.box.rotateStartZ.toFixed(6)}" />\n`;
+          xml += `${t}${t}${t}${t}<kf t="${normRotateEnd.toFixed(6)}" v="${state.box.rotateEndX.toFixed(6)},${state.box.rotateEndY.toFixed(6)},${state.box.rotateEndZ.toFixed(6)}" ${rotateEasingStr} />\n`;
+          xml += `${t}${t}${t}</property>\n`;
+
+          xml += `${t}${t}${t}<property name="height" type="float" value="1.0"/>\n`;
+          xml += `${t}${t}${t}<property name="shadingType" type="int" value="1"/>\n`;
+          xml += `${t}${t}${t}<property name="shadingType" type="int" value="1"/>\n`;
+
+          xml += `${t}${t}</effect>\n`;
         }
       }
 
       // AM interprets 'size' on vector shapes as half-extents (radius from center)
-      if (state.animType === 'cube') {
+      if (state.wipeMethod === 'mask') {
+        xml += `${t}${t}<property name="size" type="vec2" value="100.0,100.0"/>\n`;
+      } else if (state.animType === 'cube') {
         xml += `${t}${t}<property name="size" type="vec2" value="${(state.projectWidth / 2).toFixed(6)},${(state.projectHeight / 2).toFixed(6)}"/>\n`;
       } else {
         xml += `${t}${t}<property name="size" type="vec2" value="${(layer.width / 2).toFixed(6)},${(layer.height / 2).toFixed(6)}"/>\n`;
@@ -1091,6 +1302,16 @@
     splitDirectionGroup.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     state.splitDirection = btn.dataset.value;
+    fullUpdate();
+  });
+
+  // Wipe method
+  wipeMethodGroup.addEventListener('click', (e) => {
+    const btn = e.target.closest('.toggle-btn');
+    if (!btn) return;
+    wipeMethodGroup.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.wipeMethod = btn.dataset.value;
     fullUpdate();
   });
 
@@ -1193,6 +1414,15 @@
     animTypeToggleGroup.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     state.animType = btn.dataset.value;
+
+    // Show/hide Box controls
+    if (boxEffectControls) {
+      boxEffectControls.style.display = state.animType === 'box' ? 'block' : 'none';
+    }
+    if (globalTimingControls) {
+      globalTimingControls.style.display = state.animType === 'box' ? 'none' : 'block';
+    }
+
     renderSectionsUI();
     fullUpdate();
   });
@@ -1234,10 +1464,10 @@
   sectionPlusBtn.addEventListener('click', () => setSectionCount(state.sectionCount + 1));
 
   // Modal and Graph Message Listener
-  let currentEditingSection = -1; // -1 means global
+  let currentEditingTarget = 'global'; // 'global', 'box-orient', 'box-rotate', or 'sub-section-X-Y'
 
   openGraphBtn.addEventListener('click', () => {
-    currentEditingSection = -1;
+    currentEditingTarget = 'global';
     graphModal.style.display = 'flex';
   });
   
@@ -1250,16 +1480,17 @@
       const { x1, y1, x2, y2 } = event.data;
       const easingStr = `${x1}, ${y1}, ${x2}, ${y2}`;
       
-      if (currentEditingSection === -1) {
+      if (currentEditingTarget === 'global') {
         state.flipEasing = easingStr;
-      } else if (typeof currentEditingSection === 'string' && currentEditingSection.includes('-')) {
-        const [secIdx, subIdx] = currentEditingSection.split('-').map(Number);
+      } else if (currentEditingTarget === 'box-orient') {
+        state.box.orientEasing = easingStr;
+      } else if (currentEditingTarget === 'box-rotate') {
+        state.box.rotateEasing = easingStr;
+      } else if (currentEditingTarget.startsWith('sub-section-')) {
+        const [, secIdx, subIdx] = currentEditingTarget.split('-').map(Number);
         if (state.sections[secIdx] && state.sections[secIdx].subSections[subIdx]) {
           state.sections[secIdx].subSections[subIdx].easing = easingStr;
         }
-      } else if (state.sections[currentEditingSection]) {
-        // Fallback for old state
-        state.sections[currentEditingSection].easing = easingStr;
       }
       fullUpdate();
     }
@@ -1321,6 +1552,43 @@
     URL.revokeObjectURL(url);
     showToast('Downloaded XML!');
   });
+
+  // Box Control Handlers
+  if (boxEffectControls) {
+    boxOrientAllStartInput.addEventListener('input', () => { state.box.orientAllStartStr = boxOrientAllStartInput.value; fullUpdate(); });
+    boxOrientFirstEndInput.addEventListener('input', () => { state.box.orientFirstEndStr = boxOrientFirstEndInput.value; fullUpdate(); });
+    boxOrientLastEndInput.addEventListener('input', () => { state.box.orientLastEndStr = boxOrientLastEndInput.value; fullUpdate(); });
+    boxOrientStartXInput.addEventListener('input', () => { state.box.orientStartX = parseFloat(boxOrientStartXInput.value) || 0; fullUpdate(); });
+    boxOrientStartYInput.addEventListener('input', () => { state.box.orientStartY = parseFloat(boxOrientStartYInput.value) || 0; fullUpdate(); });
+    boxOrientStartZInput.addEventListener('input', () => { state.box.orientStartZ = parseFloat(boxOrientStartZInput.value) || 0; fullUpdate(); });
+    boxOrientEndXInput.addEventListener('input', () => { state.box.orientEndX = parseFloat(boxOrientEndXInput.value) || 0; fullUpdate(); });
+    boxOrientEndYInput.addEventListener('input', () => { state.box.orientEndY = parseFloat(boxOrientEndYInput.value) || 0; fullUpdate(); });
+    boxOrientEndZInput.addEventListener('input', () => { state.box.orientEndZ = parseFloat(boxOrientEndZInput.value) || 0; fullUpdate(); });
+    
+    boxRotateAllStartInput.addEventListener('input', () => { state.box.rotateAllStartStr = boxRotateAllStartInput.value; fullUpdate(); });
+    boxRotateFirstEndInput.addEventListener('input', () => { state.box.rotateFirstEndStr = boxRotateFirstEndInput.value; fullUpdate(); });
+    boxRotateLastEndInput.addEventListener('input', () => { state.box.rotateLastEndStr = boxRotateLastEndInput.value; fullUpdate(); });
+    boxRotateStartXInput.addEventListener('input', () => { state.box.rotateStartX = parseFloat(boxRotateStartXInput.value) || 0; fullUpdate(); });
+    boxRotateStartYInput.addEventListener('input', () => { state.box.rotateStartY = parseFloat(boxRotateStartYInput.value) || 0; fullUpdate(); });
+    boxRotateStartZInput.addEventListener('input', () => { state.box.rotateStartZ = parseFloat(boxRotateStartZInput.value) || 0; fullUpdate(); });
+    boxRotateEndXInput.addEventListener('input', () => { state.box.rotateEndX = parseFloat(boxRotateEndXInput.value) || 0; fullUpdate(); });
+    boxRotateEndYInput.addEventListener('input', () => { state.box.rotateEndY = parseFloat(boxRotateEndYInput.value) || 0; fullUpdate(); });
+    boxRotateEndZInput.addEventListener('input', () => { state.box.rotateEndZ = parseFloat(boxRotateEndZInput.value) || 0; fullUpdate(); });
+
+    boxOrientEasingBtn.addEventListener('click', () => {
+      currentEditingTarget = 'box-orient';
+      graphIframe.style.display = 'block';
+      graphIframe2.style.display = 'none';
+      graphModal.style.display = 'flex';
+    });
+
+    boxRotateEasingBtn.addEventListener('click', () => {
+      currentEditingTarget = 'box-rotate';
+      graphIframe.style.display = 'none';
+      graphIframe2.style.display = 'block';
+      graphModal.style.display = 'flex';
+    });
+  }
 
   // Window resize
   let resizeTimeout;
