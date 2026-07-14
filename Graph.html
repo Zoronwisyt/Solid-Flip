@@ -900,7 +900,7 @@ input[type=range]::-webkit-slider-thumb:active{transform:scale(1.3);cursor:grabb
   <span class="topbar-label">Motion Curve Editor</span>
   <div class="topbar-spacer"></div>
   <button class="topbar-code" id="topbar-copy" title="Click to copy CSS">
-    <span id="topbar-code-text">cubic-bezier(0.25, 0.10, 0.25, 1.00)</span>
+    <span id="topbar-code-text">cubic-bezier(0.79, 0.00, 0.59, 1.00)</span>
     <span class="copy-flash" id="copy-flash">✓ Copied</span>
   </button>
 </header>
@@ -1006,11 +1006,11 @@ input[type=range]::-webkit-slider-thumb:active{transform:scale(1.3);cursor:grabb
     <div class="coord-strip">
       <div class="coord-pill" id="pill-a">
         <span class="coord-dot" style="background:var(--accent-a)"></span>
-        <span id="pill-a-text">P1: 0.25, 0.10</span>
+        <span id="pill-a-text">P1: 0.79, 0.00</span>
       </div>
       <div class="coord-pill" id="pill-b">
         <span class="coord-dot" style="background:var(--accent-b)"></span>
-        <span id="pill-b-text">P2: 0.25, 1.00</span>
+        <span id="pill-b-text">P2: 0.59, 1.00</span>
       </div>
     </div>
   </main>
@@ -1059,15 +1059,15 @@ input[type=range]::-webkit-slider-thumb:active{transform:scale(1.3);cursor:grabb
       <div class="input-grid">
         <div class="param-input-wrap">
           <div class="param-label" style="color:rgba(108,99,255,0.8)">X1 <span>/ P1</span></div>
-          <input type="number" class="param-input p1" id="inp-x1" min="0" max="1" step="0.01" value="0.25">
+          <input type="number" class="param-input p1" id="inp-x1" min="0" max="1" step="0.01" value="0.79">
         </div>
         <div class="param-input-wrap">
           <div class="param-label" style="color:rgba(108,99,255,0.8)">Y1 <span>/ P1</span></div>
-          <input type="number" class="param-input p1" id="inp-y1" step="0.01" value="0.10">
+          <input type="number" class="param-input p1" id="inp-y1" step="0.01" value="0.00">
         </div>
         <div class="param-input-wrap">
           <div class="param-label" style="color:rgba(255,107,157,0.8)">X2 <span>/ P2</span></div>
-          <input type="number" class="param-input p2" id="inp-x2" min="0" max="1" step="0.01" value="0.25">
+          <input type="number" class="param-input p2" id="inp-x2" min="0" max="1" step="0.01" value="0.59">
         </div>
         <div class="param-input-wrap">
           <div class="param-label" style="color:rgba(255,107,157,0.8)">Y2 <span>/ P2</span></div>
@@ -1098,7 +1098,7 @@ input[type=range]::-webkit-slider-thumb:active{transform:scale(1.3);cursor:grabb
 
 <script>
 const PRESETS = [
-  {name:'Ease',vals:[.25,.1,.25,1]},
+  {name:'Ease',vals:[.79,0,.59,1]},
   {name:'Linear',vals:[0,0,1,1]},
   {name:'Ease In',vals:[.42,0,1,1]},
   {name:'Ease Out',vals:[0,0,.58,1]},
@@ -1114,7 +1114,7 @@ const PRESETS = [
 
 const G = 300; // grid size in SVG units
 
-let x1=.25,y1=.1,x2=.25,y2=1;
+let x1=.79,y1=0,x2=.59,y2=1;
 let dragging=null;
 let lastTouchStart=0;
 let activeProp='x';

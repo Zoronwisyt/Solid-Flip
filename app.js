@@ -81,7 +81,7 @@
       orientEasing: '0.25, 0.10, 0.25, 1.00',
       rotateEasing: '0.25, 0.10, 0.25, 1.00',
     },
-    flipEasing: '0.25, 0.10, 0.25, 1.00',
+    flipEasing: '0.79, 0.00, 0.59, 1.00',
     isPlaying: false,
     currentTimeSec: 0,
   };
@@ -1142,12 +1142,25 @@
           xml += `${t}${t}</effect>\n`;
         } else if (state.animType === 'cube') {
           // Cube Effect
-          const visualToProjectRatio = 650 / 1080;
-          const scaleMultiplier = layer.width / (state.projectWidth * visualToProjectRatio);
-          const cubeScale = 1.32 * scaleMultiplier;
+          // Mask layers use a 100 x 100 base shape, so calibrate the cube from
+          // the known-good 625 x 78.1 layer rather than from the full project.
+          // For vertical cuts the reference axes are swapped. This keeps the
+          // same correction when the split direction changes:
+          //   cubeScale = 1.97 * sqrt((layerW * layerH) / (refW * refH))
+          const isHorizontalSplit = state.splitDirection === 'horizontal';
+          const maskCubeReferenceWidth = isHorizontalSplit ? 625 : 78.1;
+          const maskCubeReferenceHeight = isHorizontalSplit ? 78.1 : 625;
+          const maskCubeReferenceScale = 1.97;
+          const maskCubeAreaRatio = (layer.width * layer.height) /
+            (maskCubeReferenceWidth * maskCubeReferenceHeight);
+          const cubeScale = state.wipeMethod === 'mask'
+            ? maskCubeReferenceScale * Math.sqrt(Math.max(maskCubeAreaRatio, 0))
+            : 1.32 * (layer.width / (state.projectWidth * (650 / 1080)));
           
           const cubeWidth = state.projectWidth / 1000;
-          const cubeHeight = state.projectHeight / 1000;
+          const cubeHeight = state.wipeMethod === 'mask' && state.splitDirection !== 'horizontal'
+            ? 1.056
+            : state.projectHeight / 1000;
           const cubeDepth = state.projectWidth / 1000;
           
           xml += `${t}${t}<effect id="com.alightcreative.effects.cube2" locallyApplied="true">\n`;
@@ -1168,6 +1181,7 @@
           xml += `${t}${t}${t}<property name="shadingType" type="int" value="0"/>\n`;
           xml += `${t}${t}${t}<property name="width" type="float" value="${cubeWidth.toFixed(6)}"/>\n`;
           xml += `${t}${t}</effect>\n`;
+
         } else if (state.animType === 'box') {
           // Box Effect
           xml += `${t}${t}<effect id="com.alightcreative.effects.box" locallyApplied="true">\n`;
