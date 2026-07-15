@@ -1430,6 +1430,7 @@
     animTypeToggleGroup.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     state.animType = btn.dataset.value;
+    showToast('Experimental feature — animation types are still in development.');
 
     // Show/hide Box controls
     if (boxEffectControls) {

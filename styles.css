@@ -1167,6 +1167,102 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
+/* Wide desktop layout: keep dropdowns compact and let the page flow naturally. */
+@media (min-width: 1600px) {
+  main {
+    max-width: 1720px;
+    grid-template-columns: 340px minmax(0, 1fr) 380px;
+    gap: 18px;
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+
+  .controls-panel {
+    height: auto;
+    max-height: none;
+  }
+
+  .controls-body {
+    height: auto;
+    overflow: visible;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .drawer-content,
+  .control-drawer[open] .drawer-content {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+    scrollbar-gutter: auto;
+    gap: 8px;
+    padding: 3px 10px 10px;
+  }
+
+  .control-drawer summary {
+    padding: 9px 11px;
+  }
+
+  .section-block {
+    padding: 9px;
+    margin-bottom: 6px;
+  }
+}
+
+/* No nested scroll wheels: controls expand with the document instead. */
+.control-drawer[open] .drawer-content,
+.controls-body {
+  scrollbar-width: none;
+}
+
+.control-drawer[open] .drawer-content::-webkit-scrollbar,
+.controls-body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+}
+
+/* Let the document itself provide the only scroll when more settings are open. */
+.controls-panel {
+  height: auto;
+  max-height: none;
+}
+
+.controls-body {
+  height: auto;
+  flex: none;
+  overflow: visible;
+}
+
+.control-drawer[open] .drawer-content {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+}
+
+.experimental-badge {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 2px 5px;
+  border: 1px solid rgba(245, 190, 91, .34);
+  border-radius: 4px;
+  color: #f5be5b;
+  font: 500 8px var(--font-mono);
+  letter-spacing: .06em;
+  vertical-align: 1px;
+}
+
+.experimental-note {
+  padding: 7px 9px;
+  border: 1px solid rgba(245, 190, 91, .18);
+  border-radius: 6px;
+  background: rgba(245, 190, 91, .06);
+  color: #c9a76d;
+  font: 9px var(--font-mono);
+  line-height: 1.45;
+}
+
 /* --- Animations --- */
 @keyframes fadeInUp {
   from {
@@ -1482,4 +1578,146 @@ select:focus,
 
 .data-panel {
   animation: fadeInUp 0.5s var(--ease-out) 0.3s both;
+}
+
+/* Compact utility theme — aligned with Keyframe Adjuster */
+:root {
+  --bg-deep: #0b0d12;
+  --bg-surface: rgba(21, 25, 34, .88);
+  --bg-surface-hover: rgba(255,255,255,.055);
+  --bg-elevated: #11151d;
+  --border-subtle: #29303d;
+  --border-accent: rgba(185,236,107,.32);
+  --text-primary: #f4f6fa;
+  --text-secondary: #8e98a9;
+  --text-tertiary: #596274;
+  --accent-violet: #b9ec6b;
+  --accent-violet-dim: rgba(185,236,107,.11);
+  --accent-cyan: #6de5dc;
+  --accent-cyan-dim: rgba(109,229,220,.10);
+  --font-sans: 'Manrope', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --radius-xl: 14px;
+  --radius-lg: 12px;
+  --radius-md: 9px;
+  --radius-sm: 7px;
+}
+
+body { background: radial-gradient(circle at 25% 0%, #1a2630 0, transparent 34%), var(--bg-deep); }
+.orb { opacity: .12; filter: blur(100px); animation: none; }
+.orb-1 { background: var(--accent-violet); }
+.orb-2 { background: var(--accent-cyan); }
+.orb-3 { display: none; }
+header { padding: 0 max(28px, calc((100vw - 1420px) / 2)); height: 70px; background: rgba(11,13,18,.74); }
+.logo-icon { width: 36px; height: 36px; border-radius: 9px; background: rgba(185,236,107,.05); }
+.logo-icon svg { width: 27px; height: 27px; }
+.header-eyebrow { margin: 0 0 3px; font: 500 9px var(--font-mono); letter-spacing: .14em; color: var(--text-secondary); }
+header h1 { font-size: 16px; letter-spacing: -.04em; background: none; -webkit-text-fill-color: var(--text-primary); }
+.subtitle { font: 10px var(--font-mono); color: var(--text-tertiary); margin-top: 3px; }
+.header-status { font: 10px var(--font-mono); color: var(--text-secondary); letter-spacing: .06em; }
+.header-status span { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:8px; background:var(--accent-violet); box-shadow:0 0 12px var(--accent-violet); }
+
+main { max-width: 1420px; padding: 22px 24px 34px; grid-template-columns: 312px minmax(0, 1fr) 324px; gap: 16px; min-height: calc(100vh - 70px); }
+.panel { border-radius: 14px; background: linear-gradient(135deg, rgba(30,36,47,.88), rgba(15,18,25,.90)); box-shadow: 0 16px 45px rgba(0,0,0,.16); }
+.panel-header { padding: 15px 18px; }
+.panel-header h2 { font-size: 10px; color: var(--text-secondary); letter-spacing: .13em; }
+.panel-header h2 svg { color: var(--accent-violet); }
+.controls-body { padding: 10px; gap: 8px; overflow-y: auto; }
+.control-drawer { border: 1px solid var(--border-subtle); border-radius: 9px; background: rgba(4,7,15,.24); overflow: hidden; }
+.control-drawer summary { list-style: none; cursor: pointer; display:flex; align-items:center; justify-content:space-between; padding: 11px 12px; color: var(--text-primary); font-size: 11px; font-weight: 700; }
+.control-drawer summary::-webkit-details-marker { display:none; }
+.control-drawer summary::before { content:'›'; color:var(--accent-violet); margin-right:8px; font-size:16px; transition:transform .18s ease; }
+.control-drawer[open] summary::before { transform:rotate(90deg); }
+.control-drawer summary span { margin-right:auto; }
+.control-drawer summary small { font: 9px var(--font-mono); color:var(--text-tertiary); }
+.drawer-content { padding: 3px 12px 13px; display:flex; flex-direction:column; gap:12px; }
+.drawer-content .divider { margin: 0; }
+.control-group { gap: 5px; }
+.control-group > label { font-size: 10px; color: var(--text-secondary); }
+.toggle-group { padding: 2px; border-color: var(--border-subtle); }
+.toggle-btn { min-height: 30px; padding: 6px 7px; font-size: 10px; }
+.toggle-btn.active { background: rgba(185,236,107,.12); color:var(--accent-violet); border-color:rgba(185,236,107,.20); box-shadow:none; }
+select,.input-group input,.time-input,.stepper-input,.readonly-field { background:#11151d; border-color:#3b4554; color:var(--text-primary); }
+select,.input-group input,.time-input { min-height: 32px; font-size: 11px; }
+.input-group input { padding: 7px 9px; }
+.input-suffix { font-size: 9px; }
+select:focus,.input-group input:focus,.time-input:focus { border-color:var(--accent-violet); box-shadow: 0 0 0 3px rgba(185,236,107,.07); }
+.stepper-btn { height: 32px; width: 32px; }
+.stepper-input input { height:32px; font-size:12px; }
+.section-block { padding: 11px; margin-bottom:8px; border-radius:8px; background:rgba(109,229,220,.045) !important; border-color:rgba(109,229,220,.18) !important; }
+.section-header { font-size:9px; color:var(--accent-cyan); }
+.badge { color:var(--accent-cyan); background:rgba(109,229,220,.1); font-size:8px; }
+.control-hint { font-size:9px; }
+
+.preview-panel { min-height: 0; }
+.canvas-container { margin: 16px; padding: 22px; border-radius: 12px; background-color: rgba(3,5,12,.38); }
+#previewCanvas { border-radius:8px; box-shadow:0 0 0 1px rgba(255,255,255,.14), 0 20px 45px rgba(0,0,0,.46); }
+.preview-dimensions { color:var(--accent-cyan); background:var(--accent-cyan-dim); font-size:10px; }
+.playback-controls { margin: 0 16px 14px; padding: 8px 14px !important; border-radius:9px; }
+.formulas-card { margin: 0 16px 16px; }
+.data-panel .table-container { max-height: 280px; }
+.xml-header { padding: 13px 16px; }
+.icon-btn:hover { color:var(--accent-violet); border-color:var(--accent-violet); background:rgba(185,236,107,.08); }
+
+@media (max-width: 1200px) { main { grid-template-columns: 300px minmax(0,1fr); } .data-panel { grid-column: 1 / -1; } }
+@media (max-width: 800px) { header { padding:0 18px; } .header-status { display:none; } main { padding:14px; } .controls-body { overflow:visible; } }
+
+/* Keep expanded drawers usable: the panel stays within the viewport and its body scrolls. */
+.controls-panel {
+  height: calc(100dvh - 110px);
+  max-height: calc(100dvh - 110px);
+  min-height: 0;
+  align-self: start;
+}
+
+.controls-body {
+  height: 0;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Every expanded drawer has its own compact, always-available scroll area. */
+.control-drawer[open] .drawer-content {
+  height: min(42dvh, 390px);
+  min-height: 170px;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.control-drawer[open] .drawer-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.control-drawer[open] .drawer-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, .035);
+  border-radius: 8px;
+}
+
+.control-drawer[open] .drawer-content::-webkit-scrollbar-thumb {
+  background: rgba(185, 236, 107, .55);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 8px;
+}
+
+@media (max-width: 800px) {
+  .controls-panel {
+    height: auto;
+    max-height: none;
+  }
+
+  .controls-body {
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .control-drawer[open] .drawer-content {
+    height: auto;
+    min-height: 0;
+    overflow-y: visible;
+  }
 }

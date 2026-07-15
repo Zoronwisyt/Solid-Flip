@@ -7,7 +7,7 @@
   <meta name="description" content="Create multi-layer wipe effects with precise control. Generate layer configurations and export as Alight Motion XML.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -36,10 +36,12 @@
           </svg>
         </div>
         <div>
+          <p class="header-eyebrow">MOTION UTILITY</p>
           <h1>Wipe Layer Generator</h1>
           <p class="subtitle">Multi-layer wipe effects · Alight Motion XML export</p>
         </div>
       </div>
+      <div class="header-status"><span></span>LIVE PREVIEW</div>
     </div>
   </header>
 
@@ -165,13 +167,14 @@
         </div>
 
         <div class="control-group">
-          <label>Animation Type</label>
+          <label>Animation Type <span class="experimental-badge">EXPERIMENTAL</span></label>
           <div class="toggle-group" id="animTypeToggle">
             <button class="toggle-btn" data-value="none">None</button>
             <button class="toggle-btn active" data-value="flip">Flip Layer</button>
             <button class="toggle-btn" data-value="cube">Cube</button>
             <button class="toggle-btn" data-value="box">Box</button>
           </div>
+          <div class="experimental-note">⚠ Animation types are still in development and may not be fully ready.</div>
         </div>
 
         <!-- Box Effect Controls (Initially Hidden) -->
