@@ -1704,46 +1704,45 @@ select:focus,.input-group input:focus,.time-input:focus { border-color:var(--acc
   border-radius: 8px;
 }
 
-@media (max-width: 800px) {
-  .controls-panel {
-    height: auto;
-    max-height: none;
-  }
-
-  .controls-body {
-    height: auto;
-    overflow-y: visible;
-  }
-
-  .control-drawer[open] .drawer-content {
-    height: auto;
-    min-height: 0;
-    overflow-y: visible;
-  }
-}
-
-/* iOS Safari needs the root document—not a grid or nested panel—to own the
-   vertical scroll. Explicitly release the page height and enable touch panning
-   so expanded controls and the panels below them remain reachable. */
+/* --- Mobile Responsiveness Adjustments --- */
 @media (max-width: 800px) {
   html {
     height: auto;
     min-height: 100%;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: auto; /* Enable vertical scrolling */
   }
 
   body {
     height: auto;
     min-height: 100dvh;
     overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
+    overflow-y: auto; /* Enable vertical scrolling */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS Safari */
+    touch-action: pan-y; /* Allow vertical panning */
   }
 
   main {
     min-height: 0;
-    grid-auto-rows: max-content;
+    grid-auto-rows: max-content; /* Allow rows to size based on content */
+  }
+
+  .controls-panel,
+  .preview-panel,
+  .data-panel {
+    height: auto; /* Allow panels to expand with content */
+    max-height: none; /* Remove max-height constraints */
+  }
+
+  .controls-body {
+    height: auto; /* Allow the body of controls panel to expand */
+    overflow-y: visible; /* Make content visible, relying on body scroll */
+  }
+
+  .control-drawer[open] .drawer-content {
+    height: auto; /* Allow expanded drawers to show full content */
+    min-height: 0;
+    overflow-y: visible; /* Make content visible, relying on body scroll */
   }
 }
+
