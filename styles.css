@@ -1726,20 +1726,23 @@ select:focus,.input-group input:focus,.time-input:focus { border-color:var(--acc
   .controls-panel,
   .preview-panel,
   .data-panel {
-    height: auto; /* Allow panels to expand with content */
-    max-height: none; /* Remove max-height constraints */
-    min-height: 0; /* Ensure no minimum height prevents collapse */
+    height: auto !important;
+    max-height: none !important;
+    min-height: min-content !important;
   }
 
   .controls-body {
-    height: auto; /* Allow the body of controls panel to expand */
-    overflow-y: visible; /* Make content visible, relying on body scroll */
+    height: auto !important;
+    flex: none !important;
+    overflow-y: visible !important;
+    overscroll-behavior: auto !important;
   }
 
   .control-drawer[open] .drawer-content {
-    height: auto; /* Allow expanded drawers to show full content */
-    min-height: 0;
-    overflow-y: visible; /* Make content visible, relying on body scroll */
+    height: auto !important; /* Allow expanded drawers to show full content */
+    min-height: 0 !important;
+    overflow-y: visible !important; /* Make content visible, relying on body scroll */
+    overscroll-behavior: auto !important;
   }
 }
 
