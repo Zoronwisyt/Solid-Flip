@@ -1706,25 +1706,21 @@ select:focus,.input-group input:focus,.time-input:focus { border-color:var(--acc
 
 /* --- Mobile Responsiveness Adjustments --- */
 @media (max-width: 800px) {
-  html {
+  html, body {
     height: auto;
-    min-height: 100%;
     overflow-x: hidden;
-    overflow-y: auto; /* Enable vertical scrolling */
+    /* Remove explicit overflow-y: auto and touch-action which break iOS Safari scrolling */
+    overflow-y: visible;
   }
 
   body {
-    height: auto;
     min-height: 100dvh;
-    overflow-x: hidden;
-    overflow-y: auto; /* Enable vertical scrolling */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS Safari */
-    touch-action: pan-y; /* Allow vertical panning */
   }
 
   main {
-    min-height: 0;
-    grid-auto-rows: max-content; /* Allow rows to size based on content */
+    min-height: auto; /* Allow main to grow with content */
+    display: flex;
+    flex-direction: column;
   }
 
   .controls-panel,
@@ -1732,6 +1728,7 @@ select:focus,.input-group input:focus,.time-input:focus { border-color:var(--acc
   .data-panel {
     height: auto; /* Allow panels to expand with content */
     max-height: none; /* Remove max-height constraints */
+    min-height: 0; /* Ensure no minimum height prevents collapse */
   }
 
   .controls-body {
