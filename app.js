@@ -6,6 +6,11 @@
 (() => {
   'use strict';
 
+  // Alight Motion can round independently scaled, fractional-pixel shapes in a
+  // way that reveals the transparent canvas between two edge-to-edge tiles.
+  // Expand each mask tile by this amount on every edge so adjacent tiles overlap.
+  const MASK_SEAM_OVERSCAN_PX = 2;
+
   // ---- State ----
   const state = {
     baseWidth: 1080,
@@ -387,12 +392,17 @@
           };
 
           if (state.wipeMethod === 'mask') {
-            const layerWidth = (layerXEnd - layerXStart) * state.solidWidth;
-            const layerHeight = (layerYEnd - layerYStart) * state.solidHeight;
+            const tileWidth = (layerXEnd - layerXStart) * state.solidWidth;
+            const tileHeight = (layerYEnd - layerYStart) * state.solidHeight;
+            // Keep the tile's calculated center, but extend all four edges by
+            // two pixels. A shared edge therefore has a four-pixel overlap,
+            // eliminating anti-aliasing/rounding seams in the imported XML.
+            const layerWidth = tileWidth + (MASK_SEAM_OVERSCAN_PX * 2);
+            const layerHeight = tileHeight + (MASK_SEAM_OVERSCAN_PX * 2);
             const solidOriginX = (state.projectWidth - state.solidWidth) / 2;
             const solidOriginY = (state.projectHeight - state.solidHeight) / 2;
-            const layerLocX = solidOriginX + (layerXStart * state.solidWidth) + (layerWidth / 2);
-            const layerLocY = solidOriginY + (layerYStart * state.solidHeight) + (layerHeight / 2);
+            const layerLocX = solidOriginX + (layerXStart * state.solidWidth) + (tileWidth / 2);
+            const layerLocY = solidOriginY + (layerYStart * state.solidHeight) + (tileHeight / 2);
 
             Object.assign(layerProps, {
               locX: layerLocX,
