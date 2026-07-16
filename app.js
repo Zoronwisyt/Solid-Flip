@@ -10,6 +10,9 @@
   // way that reveals the transparent canvas between two edge-to-edge tiles.
   // Expand each mask tile by this amount on every edge so adjacent tiles overlap.
   const MASK_SEAM_OVERSCAN_PX = 2;
+  // The same rounding issue applies to the normalized ranges used by the Wipe
+  // effect. This is converted to a fraction of the solid for each axis.
+  const WIPE_SEAM_OVERSCAN_PX = 2;
 
   // ---- State ----
   const state = {
@@ -415,15 +418,20 @@
               wipeYEnd: 1,
             });
           } else { // 'wipe' method
+            // Wipe ranges are normalized (0–1). Expand them by two physical
+            // pixels on each edge so Alight Motion cannot expose a transparent
+            // seam where two independently rendered Wipe effects meet.
+            const wipeOverscanX = WIPE_SEAM_OVERSCAN_PX / state.solidWidth;
+            const wipeOverscanY = WIPE_SEAM_OVERSCAN_PX / state.solidHeight;
             Object.assign(layerProps, {
               locX: state.projectWidth / 2,
               locY: state.projectHeight / 2,
               width: state.solidWidth,
               height: state.solidHeight,
-              wipeXStart: layerXStart,
-              wipeXEnd: layerXEnd,
-              wipeYStart: layerYStart,
-              wipeYEnd: layerYEnd,
+              wipeXStart: Math.max(0, layerXStart - wipeOverscanX),
+              wipeXEnd: Math.min(1, layerXEnd + wipeOverscanX),
+              wipeYStart: Math.max(0, layerYStart - wipeOverscanY),
+              wipeYEnd: Math.min(1, layerYEnd + wipeOverscanY),
             });
           }
 

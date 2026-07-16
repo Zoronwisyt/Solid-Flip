@@ -1721,3 +1721,29 @@ select:focus,.input-group input:focus,.time-input:focus { border-color:var(--acc
     overflow-y: visible;
   }
 }
+
+/* iOS Safari needs the root document—not a grid or nested panel—to own the
+   vertical scroll. Explicitly release the page height and enable touch panning
+   so expanded controls and the panels below them remain reachable. */
+@media (max-width: 800px) {
+  html {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  body {
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+
+  main {
+    min-height: 0;
+    grid-auto-rows: max-content;
+  }
+}
