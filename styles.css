@@ -1704,45 +1704,213 @@ select:focus,.input-group input:focus,.time-input:focus { border-color:var(--acc
   border-radius: 8px;
 }
 
-/* --- Mobile Responsiveness Adjustments --- */
+/* ===========================================
+   MOBILE SHELL — Tabbed layout for ≤800px
+   =========================================== */
+
+/* Hidden on desktop */
+.mobile-shell {
+  display: none;
+}
+
 @media (max-width: 800px) {
+  /* ---- Hide desktop layout ---- */
+  #app-header,
+  #app-main {
+    display: none !important;
+  }
+
+  /* ---- Show mobile shell ---- */
+  .mobile-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    min-height: 100vh; /* fallback */
+    position: relative;
+  }
+
+  /* ---- Reset html/body for native scroll ---- */
   html, body {
     height: auto;
     overflow-x: hidden;
-    /* Remove explicit overflow-y: auto and touch-action which break iOS Safari scrolling */
     overflow-y: visible;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     min-height: 100dvh;
+    padding-bottom: 0;
   }
 
-  main {
-    min-height: auto; /* Allow main to grow with content */
+  /* ---- Mobile Header ---- */
+  .mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(11, 13, 18, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-subtle);
   }
 
-  .controls-panel,
-  .preview-panel,
-  .data-panel {
+  .mobile-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mobile-logo span {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  /* ---- Tab Content Areas ---- */
+  .mobile-tab-content {
+    display: none;
+    flex: 1;
+    padding-bottom: 72px; /* space for tab bar */
+  }
+
+  .mobile-tab-content.active {
+    display: block;
+  }
+
+  .mobile-tab-inner {
+    padding: 12px 12px 24px;
+  }
+
+  /* When controls-body is inside mobile, override ALL its desktop constraints */
+  .mobile-tab-inner > .controls-body {
     height: auto !important;
     max-height: none !important;
-    min-height: min-content !important;
-  }
-
-  .controls-body {
-    height: auto !important;
+    min-height: 0 !important;
     flex: none !important;
+    overflow: visible !important;
     overflow-y: visible !important;
     overscroll-behavior: auto !important;
+    -webkit-overflow-scrolling: auto !important;
+    padding: 0 !important;
+    gap: 10px !important;
   }
 
-  .control-drawer[open] .drawer-content {
-    height: auto !important; /* Allow expanded drawers to show full content */
+  /* Drawers inside mobile - fully expanded, no inner scroll */
+  .mobile-tab-inner .control-drawer[open] .drawer-content {
+    height: auto !important;
+    max-height: none !important;
     min-height: 0 !important;
-    overflow-y: visible !important; /* Make content visible, relying on body scroll */
+    overflow: visible !important;
+    overflow-y: visible !important;
     overscroll-behavior: auto !important;
+    scrollbar-gutter: auto !important;
+  }
+
+  /* Canvas container in mobile - sized for portrait */
+  .mobile-tab-inner .canvas-container {
+    margin: 0 0 12px;
+    padding: 14px;
+    min-height: 280px;
+    border-radius: 12px;
+  }
+
+  /* Playback controls in mobile */
+  .mobile-tab-inner .playback-controls {
+    margin: 0 0 12px !important;
+    border-radius: 10px;
+  }
+
+  /* Formulas card in mobile */
+  .mobile-tab-inner .formulas-card {
+    margin: 0 0 12px !important;
+  }
+
+  /* Table container in mobile - no max-height, show all rows */
+  .mobile-tab-inner .table-container {
+    max-height: none !important;
+    overflow: visible !important;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  /* XML section in mobile */
+  .mobile-tab-inner .xml-section {
+    min-height: 0;
+  }
+
+  .mobile-tab-inner .xml-code-container {
+    max-height: 300px;
+    overflow: auto;
+  }
+
+  /* ---- Bottom Tab Bar ---- */
+  .mobile-tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    display: flex;
+    align-items: stretch;
+    height: 60px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(11, 13, 18, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .mobile-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: var(--text-tertiary);
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    padding: 6px 0;
+  }
+
+  .mobile-tab svg {
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+
+  .mobile-tab.active {
+    color: var(--accent-violet);
+  }
+
+  .mobile-tab.active svg {
+    transform: scale(1.1);
+  }
+
+  .mobile-tab:active {
+    transform: scale(0.95);
+  }
+
+  /* ---- Panel header inside mobile — hide redundant panel headers ---- */
+  .mobile-tab-inner > .panel-header {
+    display: none;
+  }
+
+  /* ---- Graph modal in mobile ---- */
+  .graph-modal {
+    padding: 0 !important;
+  }
+
+  .graph-modal-content {
+    width: 100% !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
   }
 }
-

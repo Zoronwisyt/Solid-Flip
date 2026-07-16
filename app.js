@@ -1771,4 +1771,125 @@
   // ---- Initialize ----
   renderSectionsUI();
   fullUpdate();
+
+  // ==========================================
+  // MOBILE SHELL — DOM migration & tab switching
+  // ==========================================
+  (() => {
+    const MOBILE_BREAKPOINT = 800;
+    let isMobileLayout = false;
+
+    // Desktop parent references (to restore nodes when going back to desktop)
+    const controlsPanel = document.getElementById('controls-panel');
+    const previewPanel  = document.getElementById('preview-panel');
+    const dataPanel     = document.getElementById('data-panel');
+
+    // Mobile slots
+    const mobileConfigSlot  = document.getElementById('mobileConfigSlot');
+    const mobilePreviewSlot = document.getElementById('mobilePreviewSlot');
+    const mobileDataSlot    = document.getElementById('mobileDataSlot');
+    const mobileTabBar      = document.getElementById('mobileTabBar');
+
+    if (!mobileConfigSlot || !mobilePreviewSlot || !mobileDataSlot || !mobileTabBar) return;
+
+    // Elements to migrate
+    const controlsBody      = controlsPanel ? controlsPanel.querySelector('.controls-body') : null;
+    const canvasContainer   = document.getElementById('canvasContainer');
+    const playbackControls  = previewPanel ? previewPanel.querySelector('.playback-controls') : null;
+    const formulasCard      = document.getElementById('formulasCard');
+    const tableContainer    = document.getElementById('tableContainer');
+    const xmlSection        = dataPanel ? dataPanel.querySelector('.xml-section') : null;
+
+    // Store original parent + nextSibling for clean restoration
+    function saveOrigin(el) {
+      if (el && !el._mobileOrigin) {
+        el._mobileOrigin = { parent: el.parentNode, next: el.nextSibling };
+      }
+    }
+
+    function restoreOrigin(el) {
+      if (el && el._mobileOrigin) {
+        const { parent, next } = el._mobileOrigin;
+        if (next) {
+          parent.insertBefore(el, next);
+        } else {
+          parent.appendChild(el);
+        }
+      }
+    }
+
+    // Save origins on first load
+    [controlsBody, canvasContainer, playbackControls, formulasCard, tableContainer, xmlSection]
+      .forEach(saveOrigin);
+
+    function moveToMobile() {
+      // Config tab — move the controls body
+      if (controlsBody) mobileConfigSlot.appendChild(controlsBody);
+
+      // Preview tab — move canvas, playback, formulas
+      if (canvasContainer) mobilePreviewSlot.appendChild(canvasContainer);
+      if (playbackControls) mobilePreviewSlot.appendChild(playbackControls);
+      if (formulasCard) mobilePreviewSlot.appendChild(formulasCard);
+
+      // Data tab — move table and xml
+      if (tableContainer) mobileDataSlot.appendChild(tableContainer);
+      if (xmlSection) mobileDataSlot.appendChild(xmlSection);
+    }
+
+    function moveToDesktop() {
+      [controlsBody, canvasContainer, playbackControls, formulasCard, tableContainer, xmlSection]
+        .forEach(restoreOrigin);
+    }
+
+    function checkLayout() {
+      const shouldBeMobile = window.innerWidth <= MOBILE_BREAKPOINT;
+
+      if (shouldBeMobile && !isMobileLayout) {
+        isMobileLayout = true;
+        moveToMobile();
+        // Re-render preview since canvas parent changed
+        setTimeout(() => renderPreview(), 50);
+      } else if (!shouldBeMobile && isMobileLayout) {
+        isMobileLayout = false;
+        moveToDesktop();
+        setTimeout(() => renderPreview(), 50);
+      }
+    }
+
+    // Tab switching
+    const tabButtons = mobileTabBar.querySelectorAll('.mobile-tab');
+    const tabContents = document.querySelectorAll('.mobile-tab-content');
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-tab');
+
+        // Update buttons
+        tabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update content
+        tabContents.forEach(tc => tc.classList.remove('active'));
+        const target = document.getElementById(targetId);
+        if (target) target.classList.add('active');
+
+        // Scroll to top of page when switching tabs
+        window.scrollTo(0, 0);
+
+        // Re-render preview if switching to preview tab
+        if (targetId === 'mobileTabPreview') {
+          setTimeout(() => renderPreview(), 50);
+        }
+      });
+    });
+
+    // Listen for resize
+    window.addEventListener('resize', () => {
+      checkLayout();
+    });
+
+    // Initial check
+    checkLayout();
+  })();
+
 })();
